@@ -1,0 +1,7 @@
+add_subdirectory(device/mem)
+add_subdirectory(device/bus)
+add_subdirectory(device/uart_rtl)
+add_subdirectory(device/uartlite)
+add_subdirectory(device/rvcore_spike)
+add_subdirectory(device/rvcore_simple)
+add_subdirectory(waveform_encoder/uart_encoder)
