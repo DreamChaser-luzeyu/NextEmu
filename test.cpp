@@ -2,6 +2,7 @@
 #include "sdk/test.h"
 #include "sdk/base/ClkDrive.hpp"
 #include "sdk/interface/waveform_generator.h"
+#include "sdk/interface/digital_if.h"
 #include "sdk/base/LogicAnalyzer.hpp"
 #include "builtin/waveform_encoder/uart_encoder/include/UartEncoder.h"
 
@@ -72,5 +73,28 @@ TEST_CASE(test_logic_analyzer, "Test of virtual logic analyzer") {
     // Seq should be 1 1 0 0
 }
 
+TEST_CASE(test_wire_signal, "Test of WireSignal class") {
+    auto* ws = new Interface_ns::WireSignal(63, 0);
 
+    assert(ws->setBit(63, Interface_ns::WireSignal::BIT_POS) == false);
+
+    for(int i=0; i<63; i++) {
+        assert(ws->getBit(i) == Interface_ns::WireSignal::BIT_NEG);
+    }
+
+    for(int i=0; i<63; i++) {
+        ws->setBit(i, Interface_ns::WireSignal::BIT_POS);
+        for(int j=0; j<63; j++) {
+            if(j != i) assert(ws->getBit(j) == Interface_ns::WireSignal::BIT_NEG);
+            else {
+//                LOG_DEBUG("Check!");
+                assert(ws->getBit(j) == Interface_ns::WireSignal::BIT_POS);
+            }
+        }
+        ws->setBit(i, Interface_ns::WireSignal::BIT_NEG);
+    }
+
+
+    delete ws;
+}
 

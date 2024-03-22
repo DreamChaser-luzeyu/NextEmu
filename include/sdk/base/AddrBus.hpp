@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <map>
 #include <cstring>
+#include <fstream>
+#include <filesystem>
 
 #include "sdk/sdkconfig.h"
 #include "sdk/console.h"
@@ -31,6 +33,8 @@ public:
 
     AddrBus() : mainMem(nullptr) {}
 
+    ~AddrBus() { if(mainMem) delete mainMem; }
+
     int addDev(Interface_ns::SlaveIO_I *io_handle, uint64_t begin_addr,
                bool is_main_mem = false, size_t main_mem_size = 1024l * 1024l * 128) {
         // Searching devices via lower_bound/upper_bound
@@ -42,10 +46,21 @@ public:
         return 0;
     }
 
-    int setMem(uint64_t begin_addr, bool main_mem_size = 1024l * 1024l * 128) {
+    int setMem(uint64_t begin_addr, size_t main_mem_size = 1024l * 1024l * 128, const char* init_bin_path = nullptr) {
         mainMem = new uint8_t[main_mem_size];
         memBeginAddr = begin_addr;
         memEndAddr = begin_addr + main_mem_size;
+
+        if(init_bin_path) {
+            uint64_t file_size = std::filesystem::file_size(init_bin_path);
+            if (file_size > main_mem_size) {
+                LOG_WARN("Mem: mem size is not big enough for init file.");
+                file_size = main_mem_size;
+            }
+            std::ifstream init_bin_file(init_bin_path, std::ios::in | std::ios::binary);
+            init_bin_file.read((char*)mainMem, file_size);
+        }
+
         return 0;
     }
 

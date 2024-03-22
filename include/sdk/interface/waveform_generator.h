@@ -2,14 +2,14 @@
 
 #include <cstdint>
 #include <atomic>
+#include "sdk/interface/digital_if.h"
 #include "sdk/interface/dev_if.h"
 #include "sdk/interface/samplable.h"
 
 
 namespace Interface_ns {
 
-typedef std::atomic<uint64_t> signal_val_t;
-typedef uint64_t signal_val_raw_t;
+
 
 class WaveformGenerator_I : public Triggerable_I {
 public:
