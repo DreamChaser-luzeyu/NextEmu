@@ -4,5 +4,5 @@ cmake-build*/
 *.so
 *.a
 *.dat
-**/rtl/obj_dir/
+**/rtl/obj_dir/*
 misc/riscv-isa-sim/
