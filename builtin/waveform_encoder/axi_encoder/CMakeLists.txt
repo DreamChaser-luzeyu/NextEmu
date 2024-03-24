@@ -20,8 +20,8 @@ endforeach ()
 # ----- Gen Top Module
 execute_process(
         COMMAND verilator
-        -v
-        "axi_pkg.sv"
+#        -v
+#
         --cc
         --Wno-WIDTH
         --Wno-UNOPTFLAT
@@ -30,6 +30,7 @@ execute_process(
         --Wno-SELRANGE
         --Wno-SYMRSVDWORD
         --trace
+        "axi_pkg.sv"
         "axi_from_mem.sv"
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/rtl"
 )
