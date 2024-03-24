@@ -43,7 +43,7 @@ public:
                                                  dtb_enabled,
                                                  dtb_file, socket_enabled, cmd_file), nextEmuBus(nextemu_bus) {
 //        this->get_core()
-        clint_t* clint = new clint_t(this, this->CPU_HZ, this->get_cfg().real_time_clint);
+        clint_t* clint = new clint_t(this, sim_t::CPU_HZ / sim_t::INSNS_PER_RTC_TICK / 100, this->get_cfg().real_time_clint);
         plic = new plic_t(this, 4);  // Maximum num of interrupts supported (guess?)
         add_device(0x2000000, clint, "Spike CLInt");
         add_device(0xc000000, plic, "Spike PLIC");
@@ -64,7 +64,8 @@ public:
         LOG_INFO("SpikePlatform: Implicit added device `%s` at address %016lx", desc, addr);
     }
 
-    virtual bool mmio_fetch(reg_t paddr, size_t len, uint8_t* bytes) override { return mmio_load(paddr, len, bytes); }
+    bool mmio_fetch(reg_t paddr, size_t len, uint8_t* bytes) override { return mmio_load(paddr, len, bytes); }
+
     // no need to override this func
 //    bool mmio_fetch(reg_t paddr, size_t len, uint8_t *bytes) override {
 //

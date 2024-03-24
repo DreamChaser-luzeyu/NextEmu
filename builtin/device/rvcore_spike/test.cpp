@@ -2,7 +2,6 @@
 #include "sdk/test.h"
 
 #include "SpikePlatform.hpp"
-#include "SpikeCore.h"
 
 REGISTER_TEST_UNIT(RVCoreSpike_TestUnit)
 
@@ -41,14 +40,18 @@ TEST_CASE(test_spike_main, "A test of Spike main() func") {
     const char *load_path = "/home/luzeyu/temp/memu_linux/opensbi-1.3.1/build/platform/generic/firmware/fw_payload.bin";
     auto* mem = new Mem(load_path, 4096l*1024l*1024l);
 //    bus->addDev(mem, 0x80000000);
-    bus->addDev(mem, 0x80000000);
+//    bus->addDev(mem, 0x80000000, true);
+    bus->setMem(0x80000000, 1024l * 1024l * 1024l * 4, load_path);
 
-    auto* uart = new Builtin_ns::Uartlite();
-    bus->addDev(uart, 0x60100000);
+
 
 
 
     auto* p = new SpikePlatform(bus);
+
+    auto* uart = new Builtin_ns::Uartlite(p);
+    bus->addDev(uart, 0x60100000);
+    uart->spawnInputThread();
 
     auto* cd = new Base_ns::ClkDrive(200);
     cd->regTickObj(uart);

@@ -12,14 +12,27 @@ execute_process(COMMAND rm -rf obj_dir WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE
 
 # ----- RTL Sources
 file(GLOB RTL_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/rtl/*.v")
+file(GLOB RTL_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/rtl/*.sv")
 message("RTL Source List:")
 foreach (RTL_SRC_FILE ${RTL_SRC_FILES})
     message("    ${RTL_SRC_FILE}")
-    execute_process(
-            COMMAND verilator --cc --trace ${RTL_SRC_FILE}
-            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/rtl"
-    )
 endforeach ()
+# ----- Gen Top Module
+execute_process(
+        COMMAND verilator
+        -v
+        "axi_pkg.sv"
+        --cc
+        --Wno-WIDTH
+        --Wno-UNOPTFLAT
+        --Wno-CASEINCOMPLETE
+        --Wno-MULTIDRIVEN
+        --Wno-SELRANGE
+        --Wno-SYMRSVDWORD
+        --trace
+        "axi_from_mem.sv"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/rtl"
+)
 
 # ----- mkdir
 execute_process(COMMAND mkdir include WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/rtl")
