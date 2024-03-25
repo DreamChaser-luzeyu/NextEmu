@@ -1,8 +1,12 @@
 #pragma once
 
 #include "sdk/interface/dev_if.h"
-#include "spike_obj_factory.h"
-#include "mysim.h"
+#include "sdk/base/AddrBus.hpp"
+//#include "spike_obj_factory.h"
+//#include "mysim.h"
+
+
+class MySim;
 
 class SpikePlatform : public Interface_ns::MasterIO_I,
         public Interface_ns::InterruptController_I , public Interface_ns::Runnable_I {
@@ -30,20 +34,15 @@ public:
          * @note Function `create_sim` is almost exactly the same as the `main` func in spike.
          * @note We want to keep as many spike's functions as possible.
          */
+        MySim* create_sim(int argc, const char **argv, Base_ns::AddrBus *nextemu_bus);
         sim = create_sim(8, argv, bus);
         setIntMutex.unlock();
 //        sim->get_harts();
     }
 
-    void setInt(uint32_t int_id, bool level) override {
-        setIntMutex.lock();
-        sim->plic->set_interrupt_level(int_id, (int) level);
-        setIntMutex.unlock();
-    }
+    void setInt(uint32_t int_id, bool level) override;
 
-    int run() override {
-        return sim->run();
-    }
+    int run() override;
 
     void step() override {
         assert(0); // Not implemented

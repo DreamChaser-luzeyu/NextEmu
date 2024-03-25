@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <cassert>
+#include <mutex>
 #include "sdk/interface/waveform_generator.h"
 #include "sdk/console.h"
 
@@ -11,7 +12,7 @@ class UartEncoder : public Interface_ns::WaveformGenerator_I {
 private:
     const uint64_t clkFreqHz;
     const uint64_t baudRate;
-    uint8_t *txData;
+    const uint8_t *txData;
     uint64_t txDataBytes;
     uint64_t cycleCounter = 0;
     uint64_t bitCounter = 0;
@@ -21,6 +22,7 @@ private:
     const uint64_t bytesDelay;
     const uint64_t payloadBits;
 
+    std::mutex ueMutex;
 
     Interface_ns::signal_val_t currentLogicVal;
     Interface_ns::WireSignal* wireSignal;
@@ -32,7 +34,7 @@ private:
     uint8_t currentState;
     uint8_t nextState;
 
-    uint8_t get_tx_data_bit(uint64_t bit_index, const uint8_t *data) {
+    static uint8_t get_tx_data_bit(uint64_t bit_index, const uint8_t *data) {
         uint64_t byte_index = bit_index >> 3;
         uint8_t bit_index_in_byte = bit_index % 8;
         return !!((data[byte_index] >> bit_index_in_byte) & 0b00000001);
@@ -86,7 +88,7 @@ private:
 
 public:
 
-    explicit UartEncoder(uint64_t clk_freq_hz, uint8_t *data, uint64_t data_len_bytes, uint64_t baurd_rate = 115200,
+    explicit UartEncoder(uint64_t clk_freq_hz, const uint8_t *data, uint64_t data_len_bytes, uint64_t baurd_rate = 115200,
                          uint64_t payload_bits = 8, uint64_t cycles_delay = 0, uint64_t bytes_delay = 0)
             : clkFreqHz(clk_freq_hz), txData(data), txDataBytes(data_len_bytes), baudRate(baurd_rate),
               cyclesPerBit(clkFreqHz / baudRate),
@@ -99,6 +101,7 @@ public:
         currentLogicVal.store(LOGIC_HIGH);
         wireSignal->setBit(0, Interface_ns::WireSignal::BIT_POS);
         nextState = STATE_IDLE;
+        ueMutex.unlock();
     }
 
     /**
@@ -106,6 +109,7 @@ public:
      * @param nr_ticks
      */
     void tick(uint64_t nr_ticks) override {
+        ueMutex.lock();
         if (cyclesToDelay > 0) {
             cyclesToDelay--;
             return;
@@ -117,6 +121,16 @@ public:
             else LOG_INFO("UartEncoder: Tx Done");
         }
         cycleCounter++;
+        ueMutex.unlock();
+    }
+
+    void resetData(const uint8_t *data, size_t data_len_bytes) {
+        ueMutex.lock();
+        txBitCounter = 0;
+        txDataBytes = data_len_bytes;
+        txData = data;
+        nextState = STATE_IDLE;
+        ueMutex.unlock();
     }
 
     bool finished() override {
@@ -137,7 +151,7 @@ public:
 
     Interface_ns::WireSignal *getWire(uint32_t channel) override {
         assert(channel == 0);   // We have only 1 channel for uart tx
-                return wireSignal;
+        return wireSignal;
     }
 
 };

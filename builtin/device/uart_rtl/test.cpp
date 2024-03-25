@@ -28,7 +28,7 @@ TEST_CASE(uart_rtl_rx_test, "A test of the uart rx") {
     uint64_t time_cntr = 0;
     tfp.dump(time_cntr);
     time_cntr++;
-    while(!rx_module.IO_Debug_Sample_O) {
+    while (!rx_module.IO_Debug_Sample_O) {
         rx_module.IO_Clk_I = 0;
         rx_module.eval();
         rx_module.IO_Clk_I = 1;
@@ -140,11 +140,11 @@ class UartRTLTicker : Interface_ns::Triggerable_I {
 public:
     VUartRx rxModule;
     VerilatedVcdC tfp;
-    Interface_ns::signal_val_t* signalRef;
+    Interface_ns::signal_val_t *signalRef;
     uint8_t currentClk = 0;
     uint64_t time_cntr = 0;
 
-    UartRTLTicker(Interface_ns::signal_val_t* signal_ref) : rxModule(), tfp(), signalRef(signal_ref) {
+    UartRTLTicker(Interface_ns::signal_val_t *signal_ref) : rxModule(), tfp(), signalRef(signal_ref) {
         Verilated::traceEverOn(true);
         rxModule.trace(&tfp, 0);
         tfp.open("wave_uart_test.vcd");
@@ -170,7 +170,7 @@ public:
         rxModule.eval();
         tfp.dump(time_cntr);
         currentClk = (!currentClk);
-        time_cntr ++;
+        time_cntr++;
     }
 
     virtual ~UartRTLTicker() {
@@ -179,10 +179,30 @@ public:
         tfp.close();
     }
 };
+
+class UartTester : public UartEncoder {
+private:
+    const char *data = "hello";
+
+public:
+    UartTester(uint64_t clkFreqHz, const uint8_t *data, uint64_t dataLenBytes, uint64_t baurdRate = 115200,
+               uint64_t payloadBits = 8,
+               uint64_t cyclesDelay = 0, uint64_t bytesDelay = 0) : UartEncoder(clkFreqHz, data, dataLenBytes,
+                                                                                baurdRate,
+                                                                                payloadBits, cyclesDelay, bytesDelay) {}
+
+    void tick(uint64_t nr_ticks) override {
+        if (UartEncoder::finished()) {
+            resetData((uint8_t *) data, 5);
+        }
+        UartEncoder::tick(nr_ticks);
+    }
+};
+
 TEST_CASE(async_uart_rtl_test, "Test of uart encoding & uart rtl, aync") {
     // --- UartEncoder
     uint8_t data[] = {0xaa, 0xcc, 0x01, 0xcc, 0x01, 0xaa, 0xcc, 0x01, 0xcc, 0x01};
-    auto ue = UartEncoder(1000000, data, 10, 9600);
+    auto ue = UartTester(1000000, data, 10, 9600);
     using Interface_ns::signal_val_t;
     using Interface_ns::WaveformGenerator_I;
     // --- Uart Rx RTL
@@ -194,12 +214,12 @@ TEST_CASE(async_uart_rtl_test, "Test of uart encoding & uart rtl, aync") {
     // --- ClockDrive used for uart encoder
     using Base_ns::ClkDrive;
     ClkDrive clk1(1000, true, true);
-    clk1.regTickObj((Interface_ns::Triggerable_I *)(&ue));
+    clk1.regTickObj((Interface_ns::Triggerable_I *) (&ue));
     // --- ClockDrive used for uart rx rtl
     using Base_ns::ClkDrive;
     ClkDrive clk2(2000, true, true);
 //    clk2.regTickObj((Interface_ns::Triggerable_I *)(&ut));
-    clk2.regTickObj((Interface_ns::Triggerable_I *)(&uart_rtl));
+    clk2.regTickObj((Interface_ns::Triggerable_I *) (&uart_rtl));
 
     // --- Let them run
     clk2.spawn();
@@ -207,7 +227,8 @@ TEST_CASE(async_uart_rtl_test, "Test of uart encoding & uart rtl, aync") {
     clk1.spawn();
     // --- Sleep for 3s
     sleep(10);
-    while(!ue.finished());
+    while(true);
+//    while (!ue.finished());
     // --- Terminate threads
     clk2.terminate();
     clk1.terminate();

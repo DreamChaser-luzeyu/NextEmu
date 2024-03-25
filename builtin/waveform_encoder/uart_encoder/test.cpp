@@ -4,6 +4,7 @@
 #include "sdk/console.h"
 #include "sdk/test.h"
 #include "UartEncoder.h"
+#include "UartFIFOEncoder.h"
 #include "sdk/base/LogicAnalyzer.hpp"
 #include "sdk/base/ClkDrive.hpp"
 

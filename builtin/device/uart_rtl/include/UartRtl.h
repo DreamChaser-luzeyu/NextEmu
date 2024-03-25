@@ -3,12 +3,12 @@
 #include <cstdint>
 #include <cstring>
 #include <queue>
-#include "VTop.h"
-#include "VUartRx.h"
 #include "sdk/console.h"
 #include "sdk/interface/digital_if.h"
 #include "sdk/interface/dev_if.h"
 #include "sdk/symbol_attr.h"
+
+class VUartRx;
 
 namespace UartRtl_ns {
 
@@ -40,25 +40,7 @@ private:
     const static uint32_t INTR_ENABLED = (1 << 4);        ///< Indicates if interrupts is enabled.
 
 public:
-    explicit UartRtl(ModuleIf interfaceSig, Interface_ns::InterruptController_I *intc = nullptr)
-            : intc(intc), status(TX_FIFO_EMPTY), rx_fifo(0), tx_fifo(0), control(0) {
-        uartRx = new VUartRx();
-        sigUartRx = interfaceSig.sig_uart_rx;
-
-        uartRx->IO_Rx_I = sigUartRx->getBit(0);
-        uartRx->IO_Rst_I = 0;
-        uartRx->IO_Clk_I = 1;
-        uartRx->eval();
-
-        uartRx->IO_Rst_I = 1;
-        uartRx->IO_Clk_I = 0;
-        uartRx->eval();
-
-//        uartRx->IO_Rst_I = 1;
-//        uartRx->IO_Clk_I = 1;
-//        uartRx->eval();
-
-    }
+    explicit UartRtl(ModuleIf interfaceSig, Interface_ns::InterruptController_I *intc = nullptr);
 
     int load(Interface_ns::addr_t begin_addr, uint64_t len, uint8_t *buffer) override {
         if (unlikely(begin_addr + len > 16)) {
@@ -132,31 +114,7 @@ public:
         return Interface_ns::FB_SUCCESS;
     }
 
-    void tick(uint64_t nr_ticks) override {
-//        LOG_DEBUG("!");
-
-        if(intc) {
-            intc->setInt(2, (!rx.empty()) || txDone);
-        }
-
-        STDOUT_ACQUIRE_LOCK;
-        while(!tx.empty()) {
-            LOG_DEBUG("Tx byte %02x", tx.front());
-            tx.pop();
-            if(tx.empty()) txDone = true;
-        }
-        fflush(stdout);
-        STDOUT_RELEASE_LOCK;
-
-        uartRx->IO_Clk_I = !(uartRx->IO_Clk_I);
-        uartRx->IO_Rx_I = sigUartRx->getBit(0);
-        uartRx->eval();
-
-        if (uartRx->IO_RxDone_O && (uartRx->IO_Clk_I)) {
-            LOG_DEBUG("Push byte %02x to rx fifo", uartRx->IO_RxData_O);
-            rx.push((char) (uartRx->IO_RxData_O));
-        }
-    }
+    void tick(uint64_t nr_ticks) override ;
 
 
 };

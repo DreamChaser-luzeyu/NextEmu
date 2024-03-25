@@ -16,7 +16,7 @@ public:
     const static uint8_t LOGIC_HIGH = 1;
     const static uint8_t LOGIC_UNDEFINED = 2;
 
-    virtual void tick(uint64_t nr_ticks) override = 0;
+//    virtual void tick(uint64_t nr_ticks) override = 0;
 //    virtual signal_val_t* getCurrentVal(uint32_t channel) = 0;
     virtual Interface_ns::WireSignal *getWire(uint32_t channel) = 0;
     virtual bool finished() = 0;
