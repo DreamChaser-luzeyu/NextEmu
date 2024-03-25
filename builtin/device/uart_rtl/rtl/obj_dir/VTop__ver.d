@@ -1,1 +1,0 @@
-obj_dir/VTop.cpp obj_dir/VTop.h obj_dir/VTop.mk obj_dir/VTop__Slow.cpp obj_dir/VTop__Syms.cpp obj_dir/VTop__Syms.h obj_dir/VTop__Trace.cpp obj_dir/VTop__Trace__Slow.cpp obj_dir/VTop__ver.d obj_dir/VTop_classes.mk  : /usr/bin/verilator_bin /media/luzeyu/Files/Study/NextEmu/builtin/device/uart_rtl/rtl/Top.v /usr/bin/verilator_bin UartRx.v 
