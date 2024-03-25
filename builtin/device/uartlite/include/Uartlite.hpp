@@ -16,12 +16,16 @@ class Uartlite : public Interface_ns::SlaveIO_I, public Interface_ns::Triggerabl
 private:
     typedef struct UartliteReg {
         uint32_t rx_fifo;    ///< offset 0  Reading this register will result in reading the data word from the top of
-        ///< the FIFO
+                             ///< the FIFO
         uint32_t tx_fifo;    ///< offset 4  This is a write-only location. Issuing a read request to the transmit data
-        ///< FIFO generates the read acknowledgement with zero data.
+                             ///< FIFO generates the read acknowledgement with zero data.
         uint32_t status;     ///< offset 8
         uint32_t control;    ///< offset 12
     } UartliteReg_t;
+    static_assert(offsetof(UartliteReg_t, rx_fifo) == 0);
+    static_assert(offsetof(UartliteReg_t, tx_fifo) == 4);
+    static_assert(offsetof(UartliteReg_t, status) == 8);
+    static_assert(offsetof(UartliteReg_t, control) == 12);
 
     UartliteReg_t regs;
     size_t devSize;
@@ -34,10 +38,10 @@ private:
     const static uint32_t CTRL_RST_TX = 0x01;
     const static uint32_t CTRL_RST_RX = 0x02;
     const static uint32_t RX_FIFO_VALID_DATA = (1 << 0);  ///< Indicates if the receive FIFO has valid data
-    const static uint32_t RX_FIFO_FULL = (1 << 1);  ///< Indicates if the receive FIFO is full.
-    const static uint32_t TX_FIFO_EMPTY = (1 << 2);  ///< Indicates if the transmit FIFO is empty.
-    const static uint32_t TX_FIFO_FULL = (1 << 3);  ///< Indicates if the transmit FIFO is full.
-    const static uint32_t INTR_ENABLED = (1 << 4);  ///< Indicates if interrupts is enabled.
+    const static uint32_t RX_FIFO_FULL = (1 << 1);        ///< Indicates if the receive FIFO is full.
+    const static uint32_t TX_FIFO_EMPTY = (1 << 2);       ///< Indicates if the transmit FIFO is empty.
+    const static uint32_t TX_FIFO_FULL = (1 << 3);        ///< Indicates if the transmit FIFO is full.
+    const static uint32_t INTR_ENABLED = (1 << 4);        ///< Indicates if interrupts is enabled.
 
     std::thread *inputThread = nullptr;
     Interface_ns::InterruptController_I * intc = nullptr;

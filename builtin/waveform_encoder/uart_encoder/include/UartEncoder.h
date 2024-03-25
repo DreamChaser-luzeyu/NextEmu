@@ -23,6 +23,7 @@ private:
 
 
     Interface_ns::signal_val_t currentLogicVal;
+    Interface_ns::WireSignal* wireSignal;
 
     const static uint8_t STATE_IDLE = 0;
     const static uint8_t STATE_START_BIT = 1;
@@ -61,6 +62,7 @@ private:
     void on_update() {
         currentState = nextState;
         currentLogicVal.store(get_bit());
+        wireSignal->setBit(0, (uint8_t)(currentLogicVal));
         // do state transition
         switch (currentState) {
             case STATE_IDLE:
@@ -88,12 +90,14 @@ public:
                          uint64_t payload_bits = 8, uint64_t cycles_delay = 0, uint64_t bytes_delay = 0)
             : clkFreqHz(clk_freq_hz), txData(data), txDataBytes(data_len_bytes), baudRate(baurd_rate),
               cyclesPerBit(clkFreqHz / baudRate),
-              payloadBits(payload_bits), cyclesToDelay(cycles_delay), bytesDelay(bytes_delay) {
+              payloadBits(payload_bits), cyclesToDelay(cycles_delay), bytesDelay(bytes_delay),
+              wireSignal(new Interface_ns::WireSignal(1, 0)) {
         if (clkFreqHz % baudRate) {
             LOG_WARN("Cannot accurately divide the frequency using clk freq %lu and baurd rate %lu", clkFreqHz,
                      baudRate);
         }
         currentLogicVal.store(LOGIC_HIGH);
+        wireSignal->setBit(0, Interface_ns::WireSignal::BIT_POS);
         nextState = STATE_IDLE;
     }
 
@@ -125,10 +129,15 @@ public:
      * @param channel Channel of the signal
      * @return level of the signal at channel `channel`
      */
-    Interface_ns::signal_val_t *getCurrentVal(uint32_t channel) override {
+    Interface_ns::signal_val_t *getCurrentVal(uint32_t channel) {
         assert(channel == 0);   // We have only 1 channel for uart tx
 //        LOG_DEBUG("Current State: %d", currentState);
         return &currentLogicVal;
+    }
+
+    Interface_ns::WireSignal *getWire(uint32_t channel) override {
+        assert(channel == 0);   // We have only 1 channel for uart tx
+                return wireSignal;
     }
 
 };

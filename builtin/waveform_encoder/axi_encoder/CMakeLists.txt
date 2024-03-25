@@ -18,22 +18,22 @@ foreach (RTL_SRC_FILE ${RTL_SRC_FILES})
     message("    ${RTL_SRC_FILE}")
 endforeach ()
 # ----- Gen Top Module
-execute_process(
-        COMMAND verilator
-#        -v
-#
-        --cc
-        --Wno-WIDTH
-        --Wno-UNOPTFLAT
-        --Wno-CASEINCOMPLETE
-        --Wno-MULTIDRIVEN
-        --Wno-SELRANGE
-        --Wno-SYMRSVDWORD
-        --trace
-        "axi_pkg.sv"
-        "axi_from_mem.sv"
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/rtl"
-)
+#execute_process(
+#        COMMAND verilator
+##        -v
+##
+#        --cc
+#        --Wno-WIDTH
+#        --Wno-UNOPTFLAT
+#        --Wno-CASEINCOMPLETE
+#        --Wno-MULTIDRIVEN
+#        --Wno-SELRANGE
+#        --Wno-SYMRSVDWORD
+#        --trace
+#        "axi_pkg.sv"
+#        "axi_from_mem.sv"
+#        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/rtl"
+#)
 
 # ----- mkdir
 execute_process(COMMAND mkdir include WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/rtl")

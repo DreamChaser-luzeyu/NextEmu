@@ -26,9 +26,9 @@ int main() {
     (new processor_t())->hello();
 
 //    RUN_TEST_UNIT(Main_TestUnit);
-//    RUN_TEST_UNIT(UartRTL_TestUnit);
+    RUN_TEST_UNIT(UartRTL_TestUnit);
 //    RUN_TEST_UNIT(UartEncoder_TestUnit);
-    RUN_TEST_UNIT(RVCoreSpike_TestUnit);
+//    RUN_TEST_UNIT(RVCoreSpike_TestUnit);
 //    RUN_TEST_UNIT(RVCore_TestUnit);
     // --- Initialize Threads
 

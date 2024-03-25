@@ -11,6 +11,7 @@ typedef uint64_t size_t;
 const int FB_SUCCESS = 0;
 const int FB_OUT_OF_RANGE = 1;
 const int FB_DEV_NOT_FOUND = 2;
+const int FB_MISALIGNED = 3;
 
 class Triggerable_I {
 public:
