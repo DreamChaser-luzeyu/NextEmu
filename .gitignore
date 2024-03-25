@@ -8,6 +8,8 @@ cmake-build*/
 **/rtl/obj_dir/*
 **/rtl/src/
 **/rtl/src/*
+**/rtl/include/
+**/rtl/include/*
 misc/riscv-isa-sim/
 builtin/device/uart_rtl/rtl/obj_dir/VUartRx__verFiles.dat
 builtin/device/uart_rtl/rtl/obj_dir/VTop__verFiles.dat
