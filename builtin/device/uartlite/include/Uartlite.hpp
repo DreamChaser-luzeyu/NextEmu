@@ -11,7 +11,7 @@
 #include "sdk/symbol_attr.h"
 
 namespace Builtin_ns {
-
+// TODO: REFACTOR THIS SHIT
 class Uartlite : public Interface_ns::SlaveIO_I, public Interface_ns::Triggerable_I {
 private:
     typedef struct UartliteReg {
@@ -76,8 +76,7 @@ public:
 
     void readInput() {
         while (1) {
-            char c = getchar();
-//            if (c == 10) c = 13;   // convert lf to cr
+            char c = (char)getchar();
             rxMutex.lock();
             rx.push(c);
             rxMutex.unlock();

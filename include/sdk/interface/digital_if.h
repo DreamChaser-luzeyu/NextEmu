@@ -5,9 +5,11 @@
 
 namespace Interface_ns {
 
-typedef std::atomic<uint64_t> signal_val_t;
-typedef uint64_t signal_val_raw_t;
 typedef uint8_t bit_val_t;
+typedef std::atomic<bit_val_t> signal_bit_val_t;
+
+const static bit_val_t BIT_POS = 1;
+const static bit_val_t BIT_NEG = 0;
 
 class WireSignal {
 private:

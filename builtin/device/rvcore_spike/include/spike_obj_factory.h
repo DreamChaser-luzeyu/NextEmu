@@ -345,7 +345,8 @@ static std::vector<size_t> parse_hartids(const char *s) {
     return hartids;
 }
 
-MySim* create_sim(int argc, const char **argv, Base_ns::AddrBus *nextemu_bus) {
+
+SpikePlatform::MySim* create_sim(int argc, const char **argv, Base_ns::AddrBus *nextemu_bus) {
     using namespace SpikeGV_ns;
 //    bool debug = false;
 //    bool halted = false;
@@ -548,7 +549,7 @@ MySim* create_sim(int argc, const char **argv, Base_ns::AddrBus *nextemu_bus) {
         cfg.hartids = default_hartids;
     }
 
-    MySim* s = new MySim(&cfg, halted,
+    SpikePlatform::MySim* s = new SpikePlatform::MySim(&cfg, halted,
             mems, plugin_device_factories, htif_args, dm_config, log_path, dtb_enabled, dtb_file,
             socket,
             cmd_file, nextemu_bus);

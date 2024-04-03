@@ -140,11 +140,11 @@ class UartRTLTicker : Interface_ns::Triggerable_I {
 public:
     VUartRx rxModule;
     VerilatedVcdC tfp;
-    Interface_ns::signal_val_t *signalRef;
+    Interface_ns::signal_bit_val_t *signalRef;
     uint8_t currentClk = 0;
     uint64_t time_cntr = 0;
 
-    UartRTLTicker(Interface_ns::signal_val_t *signal_ref) : rxModule(), tfp(), signalRef(signal_ref) {
+    UartRTLTicker(Interface_ns::signal_bit_val_t *signal_ref) : rxModule(), tfp(), signalRef(signal_ref) {
         Verilated::traceEverOn(true);
         rxModule.trace(&tfp, 0);
         tfp.open("wave_uart_test.vcd");
@@ -203,13 +203,13 @@ TEST_CASE(async_uart_rtl_test, "Test of uart encoding & uart rtl, aync") {
     // --- UartEncoder
     uint8_t data[] = {0xaa, 0xcc, 0x01, 0xcc, 0x01, 0xaa, 0xcc, 0x01, 0xcc, 0x01};
     auto ue = UartTester(1000000, data, 10, 9600);
-    using Interface_ns::signal_val_t;
+//    using Interface_ns::signal_val_t;
     using Interface_ns::WaveformGenerator_I;
     // --- Uart Rx RTL
-//    auto ut = UartRTLTicker(ue.getCurrentVal(0));
-    UartRtl_ns::ModuleIf_t moduleIf;
-    moduleIf.sig_uart_rx = ue.getWire(0);
-    auto uart_rtl = UartRtl_ns::UartRtl(moduleIf);
+    auto ut = UartRTLTicker(ue.getBitValRef(0));
+//    UartRtl_ns::ModuleIf_t moduleIf;
+//    moduleIf.sig_uart_rx = ue.getWire(0);
+//    auto uart_rtl = UartRtl_ns::UartRtl(moduleIf);
 
     // --- ClockDrive used for uart encoder
     using Base_ns::ClkDrive;
@@ -218,8 +218,8 @@ TEST_CASE(async_uart_rtl_test, "Test of uart encoding & uart rtl, aync") {
     // --- ClockDrive used for uart rx rtl
     using Base_ns::ClkDrive;
     ClkDrive clk2(2000, true, true);
-//    clk2.regTickObj((Interface_ns::Triggerable_I *)(&ut));
-    clk2.regTickObj((Interface_ns::Triggerable_I *) (&uart_rtl));
+    clk2.regTickObj((Interface_ns::Triggerable_I *)(&ut));
+//    clk2.regTickObj((Interface_ns::Triggerable_I *) (&uart_rtl));
 
     // --- Let them run
     clk2.spawn();
@@ -227,8 +227,8 @@ TEST_CASE(async_uart_rtl_test, "Test of uart encoding & uart rtl, aync") {
     clk1.spawn();
     // --- Sleep for 3s
     sleep(10);
-    while(true);
-//    while (!ue.finished());
+//    while(true);
+    while (!ue.finished());
     // --- Terminate threads
     clk2.terminate();
     clk1.terminate();

@@ -63,11 +63,11 @@ TEST_CASE(async_logic_analyzer_test, "Test of uart encoding & logic analyzer, as
     // --- UartEncoder
     uint8_t data[] = {0xaa, 0xcc, 0x01, 0xcc, 0x01, 0xaa, 0xcc, 0x01, 0xcc, 0x01};
     auto ue = UartEncoder(9600, data, 10, 9600);
-    using Interface_ns::signal_val_t;
+    using Interface_ns::signal_bit_val_t;
     using Interface_ns::WaveformGenerator_I;
     // --- LogicAnalyzer
-    auto la = Base_ns::LogicAnalyzer("", 1, Base_ns::LogicAnalyzer::TRIGGER_MODE_ANALOG, 38400);
-    la.addChannel("uart", "u", ue.getCurrentVal(0), true);
+    auto la = Base_ns::LogicAnalyzer("test.vcd", 1, Base_ns::LogicAnalyzer::TRIGGER_MODE_ANALOG, 38400);
+    la.addChannel("uart", "u", ue.getWire(0), 0);
     la.buildVcdHeader();
     // --- ClockDrive used for uart encoder
     using Base_ns::ClkDrive;
@@ -82,7 +82,7 @@ TEST_CASE(async_logic_analyzer_test, "Test of uart encoding & logic analyzer, as
     clk2.spawn();
     clk1.spawn();
     // --- Sleep for 3s
-    sleep(2);
+    sleep(5);
     // --- Terminate threads
     clk2.terminate();
     clk1.terminate();

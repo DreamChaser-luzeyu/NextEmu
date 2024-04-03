@@ -109,7 +109,7 @@ always @(posedge IO_Clk_I or negedge IO_Rst_I) begin
     if(!IO_Rst_I) reg_rx_done_flag <= 1'b0;             // Init on reset
     else begin
         reg_rx_done_flag <= reg_stop_bit_mid_moment;   // rx done on reaching stop bit mid
-        if(reg_rx_done_flag) $display("UartRTL: Parsed 1 byte %h", IO_RxData_O);
+//        if(reg_rx_done_flag) $display("UartRTL: Parsed 1 byte %h", IO_RxData_O);
     end
 end
 

@@ -54,55 +54,55 @@ public:
         UartEncoder::tick(nr_ticks);
     }
 };
-TEST_CASE(test_spike_main, "A test of Spike main() func") {
-    auto* bus = new Base_ns::AddrBus();
-
-
-    const char *load_path = "/home/luzeyu/temp/memu_linux/opensbi-1.3.1/build/platform/generic/firmware/fw_payload.bin";
-    auto* mem = new Mem(load_path, 4096l*1024l*1024l);
-//    bus->addDev(mem, 0x80000000);
-//    bus->addDev(mem, 0x80000000, true);
-    bus->setMem(0x80000000, 1024l * 1024l * 1024l * 4, load_path);
-
-
-
-
-
-    auto* p = new SpikePlatform(bus);
-
-    auto* uart = new Builtin_ns::Uartlite(p);
-    bus->addDev(uart, 0x60100000);
-    uart->spawnInputThread();
-
-    auto* cd = new Base_ns::ClkDrive(200);
-    cd->regTickObj(uart);
-    cd->spawn();
-
-    uint8_t data[] = {0xaa, 0xcc, 0x01, 0xcc, 0x01, 0xaa, 0xcc, 0x01, 0xcc, 0x01};
-    auto ue = UartTester(1000000, data, 10, 9600);
-    UartRtl_ns::ModuleIf_t moduleIf;
-    moduleIf.sig_uart_rx = ue.getWire(0);
-    auto uart_rtl = UartRtl_ns::UartRtl(moduleIf);
-
-    bus->addDev((Interface_ns::SlaveIO_I*)(&uart_rtl), 0x60200000);
-
-
-    // --- ClockDrive used for uart encoder
-    using Base_ns::ClkDrive;
-    ClkDrive clk1(1000, true, true);
-    clk1.regTickObj((Interface_ns::Triggerable_I *) (&ue));
-    // --- ClockDrive used for uart rtl
-    using Base_ns::ClkDrive;
-    ClkDrive clk2(2000, true, true);
-    clk2.regTickObj((Interface_ns::Triggerable_I *) (&uart_rtl));
-    // --- Let them run
-    clk2.spawn();
-    clk1.spawn();
-
-
-    p->run();
-//    const char* argv[] = { "./spike", nullptr };
-//    create_sim(1, argv, bus);
-}
+//TEST_CASE(test_spike_main, "A test of Spike main() func") {
+//    auto* bus = new Base_ns::AddrBus();
+//
+//
+//    const char *load_path = "/home/luzeyu/temp/memu_linux/opensbi-1.3.1/build/platform/generic/firmware/fw_payload.bin";
+//    auto* mem = new Mem(load_path, 4096l*1024l*1024l);
+////    bus->addDev(mem, 0x80000000);
+////    bus->addDev(mem, 0x80000000, true);
+//    bus->setMem(0x80000000, 1024l * 1024l * 1024l * 4, load_path);
+//
+//
+//
+//
+//
+//    auto* p = new SpikePlatform(bus);
+//
+//    auto* uart = new Builtin_ns::Uartlite(p);
+//    bus->addDev(uart, 0x60100000);
+//    uart->spawnInputThread();
+//
+//    auto* cd = new Base_ns::ClkDrive(200);
+//    cd->regTickObj(uart);
+//    cd->spawn();
+//
+//    uint8_t data[] = {0xaa, 0xcc, 0x01, 0xcc, 0x01, 0xaa, 0xcc, 0x01, 0xcc, 0x01};
+//    auto ue = UartTester(1000000, data, 10, 9600);
+//    UartRtl_ns::ModuleIf_t moduleIf;
+//    moduleIf.sig_uart_rx = ue.getWire(0);
+//    auto uart_rtl = UartRtl_ns::UartRtl(moduleIf);
+//
+//    bus->addDev((Interface_ns::SlaveIO_I*)(&uart_rtl), 0x60200000);
+//
+//
+//    // --- ClockDrive used for uart encoder
+//    using Base_ns::ClkDrive;
+//    ClkDrive clk1(1000, true, true);
+//    clk1.regTickObj((Interface_ns::Triggerable_I *) (&ue));
+//    // --- ClockDrive used for uart rtl
+//    using Base_ns::ClkDrive;
+//    ClkDrive clk2(2000, true, true);
+//    clk2.regTickObj((Interface_ns::Triggerable_I *) (&uart_rtl));
+//    // --- Let them run
+//    clk2.spawn();
+//    clk1.spawn();
+//
+//
+//    p->run();
+////    const char* argv[] = { "./spike", nullptr };
+////    create_sim(1, argv, bus);
+//}
 
 

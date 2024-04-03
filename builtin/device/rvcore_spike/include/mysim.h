@@ -27,7 +27,7 @@ private:
     }
 };
 
-class MySim : public sim_t {
+class SpikePlatform::MySim : public sim_t {
 public:
 
     MySim(const cfg_t *cfg, bool halted,

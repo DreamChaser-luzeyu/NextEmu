@@ -8,6 +8,8 @@
 #define MEMU_STATIC static
 #endif
 
+#define EXC_FLOW_NEVER_REACH do { assert(0); } while(0)
+
 #ifdef __GNUC__
 # define   likely(x) __builtin_expect(x, 1)
 # define unlikely(x) __builtin_expect(x, 0)

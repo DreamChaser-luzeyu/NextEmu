@@ -24,7 +24,7 @@ private:
 
     std::mutex ueMutex;
 
-    Interface_ns::signal_val_t currentLogicVal;
+    Interface_ns::signal_bit_val_t currentLogicVal;
     Interface_ns::WireSignal* wireSignal;
 
     const static uint8_t STATE_IDLE = 0;
@@ -143,7 +143,7 @@ public:
      * @param channel Channel of the signal
      * @return level of the signal at channel `channel`
      */
-    Interface_ns::signal_val_t *getCurrentVal(uint32_t channel) {
+    Interface_ns::signal_bit_val_t *getBitValRef(uint32_t channel) {
         assert(channel == 0);   // We have only 1 channel for uart tx
 //        LOG_DEBUG("Current State: %d", currentState);
         return &currentLogicVal;
