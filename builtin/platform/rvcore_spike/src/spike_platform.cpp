@@ -1,4 +1,5 @@
 #include "SpikePlatform.hpp"
+#include "spike_obj_factory.h"
 #include "mysim.h"
 
 //class MySim;

@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.22)
 project(NextEmu)
 
 add_subdirectory(builtin)
 #add_subdirectory(modules)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
-include_directories(${PROJECT_SOURCE_DIR}/builtin/device/rvcore_spike/include)
+include_directories(${PROJECT_SOURCE_DIR}/builtin/platform/rvcore_spike/include)
 include_directories(${PROJECT_SOURCE_DIR}/builtin/device/uart_rtl/include)
 include_directories(${PROJECT_SOURCE_DIR}/builtin/device/uartlite/include)
 #include_directories(${PROJECT_SOURCE_DIR}/builtin/device/bus/include)

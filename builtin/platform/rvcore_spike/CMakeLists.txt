@@ -1,11 +1,12 @@
-message("Built-in mem at ${PROJECT_SOURCE_DIR}")
+message("Built-in spike_core at ${PROJECT_SOURCE_DIR}")
 
 
 set(SPIKE_REPO_ROOT_DIR ${PROJECT_SOURCE_DIR}/misc/riscv-isa-sim)
-
+set(CMAKE_CXX_STANDARD 20)
+#set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/misc/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/private_include)
 include_directories(${SPIKE_REPO_ROOT_DIR}/fdt)
 include_directories(${SPIKE_REPO_ROOT_DIR}/fesvr)
 include_directories(${SPIKE_REPO_ROOT_DIR}/softfloat)
@@ -15,7 +16,6 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${SPIKE_REPO_ROOT_DIR}/riscv)
 
 aux_source_directory(src MODULE_SRC)
-#aux_source_directory(misc/riscv-isa-sim/riscv MODULE_SRC)
 
 set(SOURCE_FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/test.cpp

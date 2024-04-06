@@ -3,11 +3,14 @@
 #include <mutex>
 #include <atomic>
 
+#include "sdk/interface/dev_if.h"
+
 namespace Interface_ns {
 
 typedef uint8_t bit_val_t;
 typedef std::atomic<bit_val_t> signal_bit_val_t;
 
+const static bit_val_t BIT_UNDEF = 2;
 const static bit_val_t BIT_POS = 1;
 const static bit_val_t BIT_NEG = 0;
 
@@ -62,6 +65,12 @@ public:
     }
 
     size_t getBusWidth() const { return busWidth; }
+};
+
+class WaveformGenerator_I : public Interface_ns::Triggerable_I {
+public:
+    virtual Interface_ns::WireSignal *getSignal(uint32_t channel) = 0;
+    virtual bool finished() = 0;
 };
 
 }

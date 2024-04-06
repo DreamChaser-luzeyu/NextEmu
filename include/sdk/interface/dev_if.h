@@ -99,13 +99,11 @@ public:
 
 };
 
-
 class InterruptController_I {
 public:
     virtual void setInt(uint32_t int_id, bool triggered) = 0;
     virtual void regIntContext(uint32_t hart_id, void* ptr) {};
 };
-
 
 }
 

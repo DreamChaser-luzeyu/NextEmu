@@ -2,6 +2,7 @@
 
 #include "sdk/base/AddrBus.hpp"
 #include "abstract_device.h"
+#include <sys/syscall.h>
 #include "sim.h"
 
 

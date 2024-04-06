@@ -11,10 +11,10 @@ TEST_CASE(test_test, "A test of test framework") {
 
 
 
-#include "processor.h"
-#include "isa_parser.h"
-#include "cfg.h"
-#include "sim.h"
+//#include "processor.h"
+//#include "isa_parser.h"
+//#include "cfg.h"
+//#include "sim.h"
 TEST_CASE(test_sim_construct, "A test of Spike sim_t construct") {
 //    isa_parser_t isa("", "");
 //    cfg_t cfg;
@@ -27,33 +27,33 @@ TEST_CASE(test_sim_construct, "A test of Spike sim_t construct") {
 //    sim_t s();
 }
 
-
-#include "spike_obj_factory.h"
-#include "SpikePlatform.hpp"
-#include "../../device/mem/include/Mem.h"
-#include "../../device/uartlite/include/Uartlite.hpp"
-#include "../../waveform_encoder/uart_encoder/include/UartEncoder.h"
-#include "sdk/base/ClkDrive.hpp"
-#include "../uart_rtl/include/UartRtl.h"
-
-class UartTester : public UartEncoder {
-private:
-    const char *data = "hello";
-
-public:
-    UartTester(uint64_t clkFreqHz, const uint8_t *data, uint64_t dataLenBytes, uint64_t baurdRate = 115200,
-               uint64_t payloadBits = 8,
-               uint64_t cyclesDelay = 0, uint64_t bytesDelay = 0) : UartEncoder(clkFreqHz, data, dataLenBytes,
-                                                                                baurdRate,
-                                                                                payloadBits, cyclesDelay, bytesDelay) {}
-
-    void tick(uint64_t nr_ticks) override {
-        if (UartEncoder::finished()) {
-            resetData((uint8_t *) data, 5);
-        }
-        UartEncoder::tick(nr_ticks);
-    }
-};
+//
+//#include "spike_obj_factory.h"
+//#include "SpikePlatform.hpp"
+//#include "../../device/mem/include/Mem.h"
+//#include "../../device/uartlite/include/Uartlite.hpp"
+//#include "../../waveform_encoder/uart_encoder/include/UartEncoder.h"
+//#include "sdk/base/ClkDrive.hpp"
+//#include "../uart_rtl/include/UartRtl.h"
+//
+//class UartTester : public UartEncoder {
+//private:
+//    const char *data = "hello";
+//
+//public:
+//    UartTester(uint64_t clkFreqHz, const uint8_t *data, uint64_t dataLenBytes, uint64_t baurdRate = 115200,
+//               uint64_t payloadBits = 8,
+//               uint64_t cyclesDelay = 0, uint64_t bytesDelay = 0) : UartEncoder(clkFreqHz, data, dataLenBytes,
+//                                                                                baurdRate,
+//                                                                                payloadBits, cyclesDelay, bytesDelay) {}
+//
+//    void tick(uint64_t nr_ticks) override {
+//        if (UartEncoder::finished()) {
+//            resetData((uint8_t *) data, 5);
+//        }
+//        UartEncoder::tick(nr_ticks);
+//    }
+//};
 //TEST_CASE(test_spike_main, "A test of Spike main() func") {
 //    auto* bus = new Base_ns::AddrBus();
 //

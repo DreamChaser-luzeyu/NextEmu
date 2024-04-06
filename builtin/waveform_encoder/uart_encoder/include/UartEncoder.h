@@ -47,13 +47,13 @@ private:
     uint8_t get_bit() {
         switch (currentState) {
             case STATE_IDLE:
-                return LOGIC_HIGH;
+                return Interface_ns::BIT_POS;
             case STATE_START_BIT:
-                return LOGIC_LOW;
+                return Interface_ns::BIT_NEG;
             case STATE_DATA_BITS:
                 return get_tx_data_bit(txBitCounter, txData);
             case STATE_STOP_BIT:
-                return LOGIC_HIGH;
+                return Interface_ns::BIT_POS;
         }
         return 0;
     }
@@ -98,7 +98,7 @@ public:
             LOG_WARN("Cannot accurately divide the frequency using clk freq %lu and baurd rate %lu", clkFreqHz,
                      baudRate);
         }
-        currentLogicVal.store(LOGIC_HIGH);
+        currentLogicVal.store(Interface_ns::BIT_POS);
         wireSignal->setBit(0, Interface_ns::WireSignal::BIT_POS);
         nextState = STATE_IDLE;
         ueMutex.unlock();
@@ -149,7 +149,7 @@ public:
         return &currentLogicVal;
     }
 
-    Interface_ns::WireSignal *getWire(uint32_t channel) override {
+    Interface_ns::WireSignal *getSignal(uint32_t channel) override {
         assert(channel == 0);   // We have only 1 channel for uart tx
         return wireSignal;
     }

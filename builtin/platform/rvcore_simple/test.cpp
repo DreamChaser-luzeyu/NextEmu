@@ -12,7 +12,7 @@ TEST_CASE(test_test, "A test of test framework") {
 #include "RV64Core.h"
 #include "CLInt.h"
 #include "PLIC.h"
-#include "ref/rv_core.hpp"
+//#include "ref/rv_core.hpp"
 #include "sdk/base/AddrBus.hpp"
 #include "../../device/mem/include/Mem.h"
 #include "../../device/uartlite/include/Uartlite.hpp"

@@ -67,7 +67,7 @@ TEST_CASE(async_logic_analyzer_test, "Test of uart encoding & logic analyzer, as
     using Interface_ns::WaveformGenerator_I;
     // --- LogicAnalyzer
     auto la = Base_ns::LogicAnalyzer("test.vcd", 1, Base_ns::LogicAnalyzer::TRIGGER_MODE_ANALOG, 38400);
-    la.addChannel("uart", "u", ue.getWire(0), 0);
+    la.addChannel("uart", "u", ue.getSignal(0), 0);
     la.buildVcdHeader();
     // --- ClockDrive used for uart encoder
     using Base_ns::ClkDrive;

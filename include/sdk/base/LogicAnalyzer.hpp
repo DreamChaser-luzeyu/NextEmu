@@ -90,7 +90,7 @@ public:
             : vcdPath(vcd_path), timeScaleNs(time_scale_ns), currentMomentNs(0),
               freqHz(freq_hz), cycleDurationNs(1000000000 / freq_hz), sampleTimes(sample_times), sampleCounter(0),
               triggerSignal(nullptr, nullptr, nullptr), triggered(false), triggerMode(trigger_mode),
-              lastTriggerSignalVal(Interface_ns::WaveformGenerator_I::LOGIC_UNDEFINED) {
+              lastTriggerSignalVal(Interface_ns::BIT_UNDEF) {
         vcdStrStream << "$date  $end\n"
                         "$version NextEmu LogicAnalyzer $end\n";
         // --- File header
@@ -130,15 +130,15 @@ public:
                             trigger_mode_t trigger_mode) {
         switch (trigger_mode) {
             case TRIGGER_MODE_LOW:
-                return current_val == Interface_ns::WaveformGenerator_I::LOGIC_LOW;
+                return current_val == Interface_ns::BIT_NEG;
             case TRIGGER_MODE_HIGH:
-                return current_val == Interface_ns::WaveformGenerator_I::LOGIC_HIGH;
+                return current_val == Interface_ns::BIT_POS;
             case TRIGGER_MODE_POSEDGE:
-                return last_val == Interface_ns::WaveformGenerator_I::LOGIC_LOW
-                       && current_val == Interface_ns::WaveformGenerator_I::LOGIC_HIGH;
+                return last_val == Interface_ns::BIT_NEG
+                       && current_val == Interface_ns::BIT_POS;
             case TRIGGER_MODE_NEGEDGE:
-                return last_val == Interface_ns::WaveformGenerator_I::LOGIC_HIGH
-                       && current_val == Interface_ns::WaveformGenerator_I::LOGIC_LOW;
+                return last_val == Interface_ns::BIT_POS
+                       && current_val == Interface_ns::BIT_NEG;
             case TRIGGER_MODE_ANALOG:
                 return true;
             default:
