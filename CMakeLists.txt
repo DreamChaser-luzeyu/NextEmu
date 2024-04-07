@@ -25,4 +25,5 @@ target_link_libraries(NextEmu
         builtin_rvcore
         uart_rtl
         builtin_uart_encoder
-        builtin_uartlite)
+        builtin_uartlite
+        builtin_axi4lite)

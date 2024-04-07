@@ -1,0 +1,1 @@
+set(VERILATOR_PATH /usr/local/share/verilator)

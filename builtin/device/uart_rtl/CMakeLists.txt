@@ -75,7 +75,7 @@ endforeach ()
 
 # ----- C++ Sources
 aux_source_directory(src MODULE_SRC)
-aux_source_directory(rtl/src RTL_SRC)
+#aux_source_directory(rtl/src RTL_SRC)
 #aux_source_directory(/usr/local/share/verilator/include VERILATOR_SRCS)
 
 set(SOURCE_FILES

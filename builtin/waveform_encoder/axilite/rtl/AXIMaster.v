@@ -1,40 +1,42 @@
 `define WIDTH 32
 module AXIMaster(
-    input  wire                  ACLK,
-    input  wire                  ARESETn,
+    input  wire                  ACLK,      // Clock
+    input  wire                  ARESETn,   // 
     // --- ADDRESS WRITE CHANNEL
-    input  wire                  AWREADY,
-    output reg                   AWVALID,
-    output reg  [`WIDTH-1:0]     AWADDR,
+    input  wire                  AWREADY,   // Address Write Ready    
+    output reg                   AWVALID,   // Address Write Valid, HIGH means `AWADDR` valid
+    output reg  [`WIDTH-1:0]     AWADDR,    // Address Write Address
     // --- DATA WRITE CHANNEL
-    input  wire                  WREADY,
-    output reg                   WVALID,
-    output reg  [(`WIDTH/8)-1:0] WSTRB,
-    output reg  [`WIDTH-1:0]     WDATA,
+    input  wire                  WREADY,    // Write Ready
+    output reg                   WVALID,    // Write Valid, HIGH means `WDATA` valid
+    output reg  [(`WIDTH/8)-1:0] WSTRB,     // Indicates which bits are valid in `WDATA`
+    output reg  [`WIDTH-1:0]     WDATA,     // Write data, data to be writed
     // --- WRITE RESPONSE CHANNEL
-    input  wire [1:0]            BRESP,
-    input  wire                  BVALID,
-    output reg                   BREADY,
+    input  wire [1:0]            BRESP,     // Bus Response, feedback of data write
+    input  wire                  BVALID,    // Bus Valid
+    output reg                   BREADY,    // Bus Ready, HIGH means ready to receive write feedback
     // --- READ ADDRESS CHANNEL
-    input  wire                  ARREADY,
-    output reg                   ARVALID,
-    output reg  [`WIDTH-1:0]     ARADDR,
+    input  wire                  ARREADY,   // Address Read Ready, HIGH means master ready to receive read address
+    output reg                   ARVALID,   // Address Read Valid, HIGH means `ARADDR` is valid
+    output reg  [`WIDTH-1:0]     ARADDR,    // Address Read Address, address to read from slave
     // --- READ DATA CHANNEL
-    input  wire [`WIDTH-1:0]     RDATA,
-    input  wire [1:0]            RRESP,
-    input  wire                  RVALID,
-    output reg                   RREADY,
-    // --- External inputs to AXI Master
-    input  wire [`WIDTH-1:0]     awaddr,
+    input  wire [`WIDTH-1:0]     RDATA,     // Read Data, data read from slave
+    input  wire [1:0]            RRESP,     // Read Response, feedback of data read
+    input  wire                  RVALID,    // Read Valid, HIGH means `RDATA` valid
+    output reg                   RREADY,    // Read Ready, HIGH means master ready to receive slave feedback
+    // --- Ports to be connected to CPU
+    input  wire [`WIDTH-1:0]     awaddr,    
     input  wire [(`WIDTH/8)-1:0] wstrb,
     input  wire [`WIDTH-1:0]     wdata,
     input  wire [`WIDTH-1:0]     araddr,
-    output reg  [31:0]           data_out
+    output reg  [`WIDTH-1:0]     data_out,
+    output wire [1:0]            feedback_r,
+    output wire [1:0]            feedback_w
 );
 
-// creating the master's local ram of 4096 Bytes(4 KB).
-// reg    [7:0] read_mem [4095:0]; // Unused?
-
+// ----- Feedback
+assign feedback_r = RRESP;
+assign feedback_w = BRESP;
 
 // ----- WRITE ADDRESS CHANNEL MASTER -----
 parameter [1:0] WA_IDLE_M  = 2'b00,
