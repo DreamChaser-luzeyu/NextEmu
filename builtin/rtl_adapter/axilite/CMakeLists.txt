@@ -3,14 +3,15 @@ message("Built-in axi4lite at ${CMAKE_CURRENT_SOURCE_DIR}")
 include(${PROJECT_SOURCE_DIR}/cmake/verilator.cmake)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/private_include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/rtl/include)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 # ----- C++ srcs
 aux_source_directory(src MODULE_SRC)
-set(SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/test.cpp)
+set(SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/test.cpp ${MODULE_SRC})
 # ----- HDL srcs
-file(GLOB RTL_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/rtl/AXIMaster.v")
+file(GLOB RTL_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/rtl/Top.v")
 # ----- Verilator Build
 VerilatorBuild(${RTL_SRC_FILES})
 # ----- Add verilator generated libs

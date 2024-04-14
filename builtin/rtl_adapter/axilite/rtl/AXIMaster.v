@@ -9,7 +9,7 @@ module AXIMaster(
     // --- DATA WRITE CHANNEL
     input  wire                  WREADY,    // Write Ready
     output reg                   WVALID,    // Write Valid, HIGH means `WDATA` valid
-    output reg  [(`WIDTH/8)-1:0] WSTRB,     // Indicates which bits are valid in `WDATA`
+    output reg  [(`WIDTH/8)-1:0] WSTRB,     // Indicates which bits are valid in `WDATA`, ignored by some IP cores
     output reg  [`WIDTH-1:0]     WDATA,     // Write data, data to be writed
     // --- WRITE RESPONSE CHANNEL
     input  wire [1:0]            BRESP,     // Bus Response, feedback of data write
@@ -23,7 +23,7 @@ module AXIMaster(
     input  wire [`WIDTH-1:0]     RDATA,     // Read Data, data read from slave
     input  wire [1:0]            RRESP,     // Read Response, feedback of data read
     input  wire                  RVALID,    // Read Valid, HIGH means `RDATA` valid
-    output reg                   RREADY,    // Read Ready, HIGH means master ready to receive slave feedback
+    output reg                   RREADY,    // Read Ready, HIGH means master read ready ?
     // --- Ports to be connected to CPU
     input  wire [`WIDTH-1:0]     awaddr,    
     input  wire [(`WIDTH/8)-1:0] wstrb,

@@ -1,9 +1,9 @@
 #include "VUartRx.h"
-#include "UartRtl.h"
+#include "UartliteRtl.h"
 #include "module_manifest.h"
 
 //
-//UartRtl_ns::UartRtl::UartRtl(ModuleIf interfaceSig, Interface_ns::InterruptController_I *intc)
+//UartliteRtl_ns::UartRtl::UartRtl(ModuleIf interfaceSig, Interface_ns::InterruptController_I *intc)
 //        : intc(intc), status(TX_FIFO_EMPTY), rx_fifo(0), tx_fifo(0), control(0) {
 //    uartRx = new VUartRx();
 //    sigUartRx = interfaceSig.sig_uart_rx;
@@ -25,7 +25,7 @@
 //    txMutex.unlock();
 //}
 //
-//void UartRtl_ns::UartRtl::tick(uint64_t nr_ticks) {
+//void UartliteRtl_ns::UartRtl::tick(uint64_t nr_ticks) {
 ////        LOG_DEBUG("!");
 //
 //    txMutex.lock();
@@ -64,7 +64,7 @@
 //}
 
 
-UartRtl_ns::UartRTL::UartRTL(ModuleIf interfaceSig, Interface_ns::InterruptController_I *intc, size_t dev_size)
+UartliteRtl_ns::UartRTL::UartRTL(ModuleIf interfaceSig, Interface_ns::InterruptController_I *intc, size_t dev_size)
         : waitACK(false),
           devSize(dev_size),
           intc(intc) {
@@ -89,7 +89,7 @@ UartRtl_ns::UartRTL::UartRTL(ModuleIf interfaceSig, Interface_ns::InterruptContr
     rxMutex.unlock();
 }
 
-void UartRtl_ns::UartRTL::tick(UNUSED uint64_t nr_ticks) {
+void UartliteRtl_ns::UartRTL::tick(UNUSED uint64_t nr_ticks) {
 //    LOG_DEBUG("!");
     if (intc) {
         intc->setInt(2, hasIRQ());

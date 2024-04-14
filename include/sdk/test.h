@@ -50,6 +50,12 @@ static void RunUnitTest_Test() {
 }
 
 /**
+ * Workaround the Intellisense error
+ */
+#if __INTELLISENSE__
+  #pragma diag_suppress 1094
+#endif
+/**
  * NOTE: You should not define TEST_CASE in header files
  */
 #ifdef __GNUC__

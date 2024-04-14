@@ -17,6 +17,7 @@
 # define NORETURN __attribute__ ((noreturn))
 # define ALWAYS_INLINE __attribute__ ((always_inline))
 # define UNUSED __attribute__ ((unused))
+# define NOAPI __attribute__((visibility("hidden")))
 #else
 # define   likely(x) (x)
 # define unlikely(x) (x)

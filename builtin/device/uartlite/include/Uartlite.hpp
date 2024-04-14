@@ -8,17 +8,20 @@
 #include <thread>
 #include "sdk/console.h"
 #include "sdk/interface/dev_if.h"
+#include "sdk/interface/interconnect.h"
 #include "sdk/symbol_attr.h"
 
 namespace Builtin_ns {
+typedef int fd_t;
+
 // TODO: REFACTOR THIS SHIT
 class Uartlite : public Interface_ns::SlaveIO_I, public Interface_ns::Triggerable_I {
 private:
     typedef struct UartliteReg {
         uint32_t rx_fifo;    ///< offset 0  Reading this register will result in reading the data word from the top of
-                             ///< the FIFO
+        ///< the FIFO
         uint32_t tx_fifo;    ///< offset 4  This is a write-only location. Issuing a read request to the transmit data
-                             ///< FIFO generates the read acknowledgement with zero data.
+        ///< FIFO generates the read acknowledgement with zero data.
         uint32_t status;     ///< offset 8
         uint32_t control;    ///< offset 12
     } UartliteReg_t;
@@ -44,22 +47,24 @@ private:
     const static uint32_t INTR_ENABLED = (1 << 4);        ///< Indicates if interrupts is enabled.
 
     std::thread *inputThread = nullptr;
-    Interface_ns::InterruptController_I * intc = nullptr;
+    Interface_ns::InterruptController_I *intc = nullptr;
+
+    Interface_ns::StreamIO_I *streamStub;
 
 public:
 
-    Uartlite(Interface_ns::InterruptController_I *intc = nullptr, size_t dev_size = 1024 * 1024)
-            : waitACK(false),
-              devSize(dev_size),
-              intc(intc) {
+    Uartlite(Interface_ns::StreamIO_I *stream_stub = nullptr, Interface_ns::InterruptController_I *intc = nullptr,
+             size_t dev_size = 1024 * 1024)
+            : waitACK(false), devSize(dev_size), intc(intc), streamStub(stream_stub) {
         regs.rx_fifo = 0;
         regs.tx_fifo = 0;
         regs.status = TX_FIFO_EMPTY;
         regs.control = 0;
+
     }
 
     void tick(UNUSED uint64_t nr_ticks) override {
-        if(intc) {
+        if (intc) {
             intc->setInt(1, hasIRQ());
         }
         std::unique_lock<std::mutex> lock(txMutex);
@@ -68,7 +73,8 @@ public:
             char c = tx.front();
             tx.pop();
             if (tx.empty()) waitACK = true;
-            putchar(c);
+            if(streamStub) streamStub->putc(c);
+            else putchar(c);
         }
         fflush(stdout);
         STDOUT_RELEASE_LOCK;
@@ -76,7 +82,9 @@ public:
 
     void readInput() {
         while (1) {
-            char c = (char)getchar();
+            char c;
+            if(streamStub) c = (char)streamStub->getc();
+            else c = (char)getchar();
             rxMutex.lock();
             rx.push(c);
             rxMutex.unlock();
@@ -89,7 +97,6 @@ public:
 
     int load(Interface_ns::addr_t begin_addr, uint64_t len, uint8_t *buffer) override {
         begin_addr %= devSize;
-//        LOG_INFO("Uartlite: Loading address 0x%08lx", begin_addr);
         std::unique_lock<std::mutex> locker(rxMutex); // To be released on return
         if (unlikely(begin_addr + len > sizeof(regs))) {
             LOG_ERR("Uartlite: Invalid address 0x%08lx", begin_addr);

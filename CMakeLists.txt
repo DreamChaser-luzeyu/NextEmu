@@ -7,10 +7,12 @@ add_subdirectory(builtin)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/builtin/platform/rvcore_spike/include)
 include_directories(${PROJECT_SOURCE_DIR}/builtin/device/uart_rtl/include)
+include_directories(${PROJECT_SOURCE_DIR}/builtin/device/uartlite_rtl/include)
 include_directories(${PROJECT_SOURCE_DIR}/builtin/device/uartlite/include)
 #include_directories(${PROJECT_SOURCE_DIR}/builtin/device/bus/include)
 include_directories(${PROJECT_SOURCE_DIR}/builtin/device/mem/include)
-include_directories(${PROJECT_SOURCE_DIR}/builtin/waveform_encoder/uart_encoder/include)
+include_directories(${PROJECT_SOURCE_DIR}/builtin/rtl_adapter/uart_encoder/include)
+include_directories(${PROJECT_SOURCE_DIR}/builtin/rtl_adapter/axilite/include)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -24,6 +26,7 @@ target_link_libraries(NextEmu
         builtin_rvcore_spike
         builtin_rvcore
         uart_rtl
+        uartlite_rtl
         builtin_uart_encoder
         builtin_uartlite
         builtin_axi4lite)

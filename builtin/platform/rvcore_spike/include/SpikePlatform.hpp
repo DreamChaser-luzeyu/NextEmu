@@ -7,7 +7,8 @@
 
 
 class SpikePlatform : public Interface_ns::MasterIO_I,
-        public Interface_ns::InterruptController_I , public Interface_ns::Runnable_I {
+                      public Interface_ns::InterruptController_I,
+                      public Interface_ns::Runnable_I {
 public:
     class MySim;
 private:
@@ -23,7 +24,6 @@ public:
     void step() override {
         assert(0); // Not implemented
     }
-
 
 };
 

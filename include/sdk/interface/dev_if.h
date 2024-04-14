@@ -12,6 +12,7 @@ const int FB_SUCCESS = 0;
 const int FB_OUT_OF_RANGE = 1;
 const int FB_DEV_NOT_FOUND = 2;
 const int FB_MISALIGNED = 3;
+const int FB_UNKNOWN_ERR = 4;
 
 class Triggerable_I {
 public:
