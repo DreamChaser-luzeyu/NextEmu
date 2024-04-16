@@ -35,8 +35,6 @@ private:
     void run() {
         if (tickAtOnce) do_tick();
         if (realtime) {
-
-
             using namespace std::chrono;
             using std::chrono::steady_clock;
             auto last = steady_clock::now(); // The moment when last tick finishes, initialize with now moment

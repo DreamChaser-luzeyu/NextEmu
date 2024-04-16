@@ -3,63 +3,8 @@
 #include "ModuleIf.h"
 #include "sdk/console.h"
 
-//Base_ns::AXILiteAdapter::ModuleIf::ModuleIf(int bit_width) {
-//    // --- Clk & Rst
-//    axi_ACLK_o = new Interface_ns::WireSignal(1, Interface_ns::BIT_NEG);
-//    axi_ARESET_o = new Interface_ns::WireSignal(1, Interface_ns::BIT_NEG);
-//    // --- Write - Address Channel
-//    axi_AWREADY_i = new Interface_ns::WireSignal(1, Interface_ns::BIT_NEG);
-//    axi_AWADDR_o = new Interface_ns::WireSignal(bit_width, Interface_ns::BIT_NEG);
-//    axi_AWVALID_o = new Interface_ns::WireSignal(1, Interface_ns::BIT_NEG);
-//    // --- Write - Data Channel
-//    axi_WREADY_i = new Interface_ns::WireSignal(1, Interface_ns::BIT_NEG);
-//    axi_WDATA_o = new Interface_ns::WireSignal(bit_width, Interface_ns::BIT_NEG);
-//    axi_WVALID_o = new Interface_ns::WireSignal(1, Interface_ns::BIT_NEG);
-//    axi_WSTRB_o = new Interface_ns::WireSignal(bit_width / 8, Interface_ns::BIT_NEG);
-//    // --- Write - Response Channel
-//    axi_BRESP_i = new Interface_ns::WireSignal(2, Interface_ns::BIT_NEG);
-//    axi_BVALID_i = new Interface_ns::WireSignal(1, Interface_ns::BIT_NEG);
-//    axi_BREADY_o = new Interface_ns::WireSignal(1, Interface_ns::BIT_NEG);
-//    // --- Read - Address Channel
-//    axi_ARREADY_i = new Interface_ns::WireSignal(1, Interface_ns::BIT_NEG);
-//    axi_ARADDR_o = new Interface_ns::WireSignal(bit_width, Interface_ns::BIT_NEG);
-//    axi_ARVALID_o = new Interface_ns::WireSignal(1, Interface_ns::BIT_NEG);
-//    // --- Read - Data Channel
-//    axi_RVALID_i = new Interface_ns::WireSignal(1, Interface_ns::BIT_NEG);
-//    axi_RDATA_i = new Interface_ns::WireSignal(bit_width, Interface_ns::BIT_NEG);
-//    axi_RRESP_i = new Interface_ns::WireSignal(2, Interface_ns::BIT_NEG);
-//    axi_RREADY_o = new Interface_ns::WireSignal(1, Interface_ns::BIT_NEG);
-//}
-//
-//Base_ns::AXILiteAdapter::ModuleIf::~ModuleIf() {
-//    // --- Clk & Rst
-//    delete axi_ACLK_o;
-//    delete axi_ARESET_o;
-//    // --- Write - Address Channel
-//    delete axi_AWREADY_i;
-//    delete axi_AWADDR_o;
-//    delete axi_AWVALID_o;
-//    // --- Write - Data Channel
-//    delete axi_WREADY_i;
-//    delete axi_WDATA_o;
-//    delete axi_WVALID_o;
-//    delete axi_WSTRB_o;
-//    // --- Write - Response Channel
-//    delete axi_BRESP_i;
-//    delete axi_BVALID_i;
-//    delete axi_BREADY_o;
-//    // --- Read - Address Channel
-//    delete axi_ARREADY_i;
-//    delete axi_ARADDR_o;
-//    delete axi_ARVALID_o;
-//    // --- Read - Data Channel
-//    delete axi_RVALID_i;
-//    delete axi_RDATA_i;
-//    delete axi_RRESP_i;
-//    delete axi_RREADY_o;
-//}
 
-class Base_ns::AXILiteAdapter::TopImpl {
+struct Base_ns::AXILiteAdapter::TopImpl {
 public:
     VTop* topModule;
 };

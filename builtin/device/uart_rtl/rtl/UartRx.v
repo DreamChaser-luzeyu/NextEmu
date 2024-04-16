@@ -7,6 +7,7 @@ module UartRx #(
     input  wire                         IO_Rst_I,
     input  wire                         IO_Clk_I,
     input  wire                         IO_Rx_I,
+    input  wire                         IO_RxRecvDone_I,
     output wire                         IO_RxDone_O,
     output wire[Param_PayloadBits-1:0]  IO_RxData_O,
     output wire                         IO_Debug_Sample_O
@@ -37,7 +38,7 @@ reg[Param_ClkCounterBitWidth-1:0]   reg_clk_counter;            // Counts the in
 reg[Param_BitCounterBitWidth-1:0]   reg_bit_counter;            // Counts which bit we are receiving
 // ---
 reg[1:0] reg_recv_data_bit;
-reg reg_rx_done_flag;
+reg reg_rx_done_flag;                 // Set to 1'b1 if a byte is received and ready to read
 reg[Param_PayloadBits-1:0] reg_recv_data;
 
 assign IO_RxData_O = reg_recv_data;
@@ -104,14 +105,26 @@ always @(posedge IO_Clk_I or negedge IO_Rst_I) begin
     end
 end
 
-// ----- RX Done Logic
-always @(posedge IO_Clk_I or negedge IO_Rst_I) begin
-    if(!IO_Rst_I) reg_rx_done_flag <= 1'b0;             // Init on reset
+// ----- Rx Done Logic
+reg reg_rx_valid_flag;
+/* verilator lint_off CASEINCOMPLETE */
+always @(posedge IO_Clk_I or negedge IO_Rst_I or posedge IO_RxRecvDone_I) begin
+    if(!IO_Rst_I) begin 
+        reg_rx_done_flag <= 1'b0;             // Init on reset    
+        reg_rx_valid_flag <= 1'b0;    
+    end
     else begin
-        reg_rx_done_flag <= reg_stop_bit_mid_moment;   // rx done on reaching stop bit mid
-//        if(reg_rx_done_flag) $display("UartRTL: Parsed 1 byte %h", IO_RxData_O);
+        // --- Set flag
+        reg_rx_valid_flag <= reg_stop_bit_mid_moment;
+        if(reg_stop_bit_mid_moment) reg_rx_done_flag <= 1'b1;
+        if(reg_rx_valid_flag) $display("UartRTL: Parsed 1 byte %h", IO_RxData_O); 
+        // --- Clear flag
+        if(IO_RxRecvDone_I) begin
+            reg_rx_done_flag <= 1'b0;
+        end
     end
 end
+/* verilator lint_off CASEINCOMPLETE */
 
 // ----- Grab Data Logic
 always @(posedge IO_Clk_I or negedge IO_Rst_I) begin

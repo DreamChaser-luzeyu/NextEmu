@@ -172,22 +172,15 @@ public:
 
 #include "sdk/interface/interconnect.h"
 #include "sdk/base/ByteStreamStub.h"
+#include "DummyDev.h"
 TEST_CASE(test_spike_main, "A test of Spike main() func") {
-    std::mutex test_mtx;
-    test_mtx.unlock();
-    test_mtx.lock();
-//    test_mtx.lock();
-
+    // ----- ByteStreamStub for external connect to stream-based device
     auto* stream_stub = new Base_ns::ByteStreamStub(12346, "127.0.0.1");
     stream_stub->waitForConnection();
 
-    stream_stub->putc('h');
-    stream_stub->putc('1');
-
-
+    // ----- Emulator System Bus
     auto *bus = new Base_ns::AddrBus();
-
-
+    // ----- Emulator Main Mem
     const char *load_path = "/home/luzeyu/temp/memu_linux/opensbi-1.3.1/build/platform/generic/firmware/fw_payload.bin";
     // auto *mem = new Mem(load_path, 4096l * 1024l * 1024l);
     // bus->addDev(mem, 0x80000000);
@@ -195,50 +188,46 @@ TEST_CASE(test_spike_main, "A test of Spike main() func") {
     // @note Use `setMem()` for better performance when accessing RAM
     bus->setMem(0x80000000, 1024l * 1024l * 1024l * 4, load_path);
 
-
+    // ----- Construct Emulator Platform
     auto *p = new SpikePlatform(bus);
 
+    // ----- Construct Emulator Main Console
     auto *uart = new Builtin_ns::Uartlite(stream_stub, p);
     bus->addDev(uart, 0x60100000);
     uart->spawnInputThread();
-    stream_stub->putc('?');
-    stream_stub->putc('?');
-    stream_stub->putc('?');
-    stream_stub->putc('?');
-
+    //   --- Construct ClkDrive for Emulator Main Console
     auto *cd = new Base_ns::ClkDrive(400);
     cd->regTickObj(uart);
     cd->spawn();
-    stream_stub->putc('2');
-//    uint8_t data[] = {0xaa, 0xcc, 0x01, 0xcc, 0x01, 0xaa, 0xcc, 0x01, 0xcc, 0x01};
+
+    // ----- Construct `uartlite_rtl` Test Console (input-only)
+    //   --- Construct UART Waveform Generator
     auto ue = UartTester(1000000, 9600);
     UartliteRtl_ns::ModuleIf_t moduleIf;
     moduleIf.sig_uart_rx = ue.getSignal(0);
-//    auto uart_rtl = UartliteRtl_ns::UartRtl(moduleIf, p);
-    auto uart_rtl = UartliteRtl_ns::UartRTL(moduleIf, p);
-//    uart_rtl.spawnInputThread();
-
-    bus->addDev((Interface_ns::SlaveIO_I *) (&uart_rtl), 0x60200000);
-//    bus->addDev((Interface_ns::SlaveIO_I*)(uart), 0x60200000);
-
-
-    // --- ClockDrive used for uart encoder
+    //   --- Construct ClockDriver for UART Waveform Generator
     using Base_ns::ClkDrive;
-    ClkDrive clk1(1000, true, true);
+    ClkDrive clk1(1000, true, true, "UART waveform bench clock");
     clk1.regTickObj((Interface_ns::Triggerable_I *) (&ue));
-    // --- ClockDrive used for uart rtl
+    //   --- Construct `uartlite_rtl` Module
+    auto uart_rtl = UartliteRtl_ns::UartRTL(moduleIf, p);
+    bus->addDev((Interface_ns::SlaveIO_I *) (&uart_rtl), 0x60200000);
+    //   --- ClockDrive used for uartlite rtl
     using Base_ns::ClkDrive;
-    ClkDrive clk2(2000, true, true);
+    ClkDrive clk2(2000, true, true, "uartlite rtl clock");
     clk2.regTickObj((Interface_ns::Triggerable_I *) (&uart_rtl));
+
+    // ----- Construct a dummy device for debug
+    auto dummy_dev = Builtin_ns::DummyDev("test");
+    bus->addDev((Interface_ns::SlaveIO_I *) (&dummy_dev), 0x60300000);
+
+
+
     // --- Let them run
     clk2.spawn();
     clk1.spawn();
-
-
-    stream_stub->putc('h');
     p->run();
-//    const char* argv[] = { "./spike", nullptr };
-//    create_sim(1, argv, bus);
+
 }
 
 

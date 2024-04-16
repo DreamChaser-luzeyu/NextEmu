@@ -32,7 +32,8 @@ int main() {
     (new processor_t())->hello();
     (new VTop())->hello();
 
-    RUN_TEST_UNIT(Main_TestUnit);
+//    RUN_TEST_UNIT(Main_TestUnit);
+    RUN_TEST_UNIT(Full_TestUnit);
 //    RUN_TEST_UNIT(AXILite_TestUnit);
 //    RUN_TEST_UNIT(UartliteRTL_TestUnit);
 //    RUN_TEST_UNIT(UartRTL_TestUnit);

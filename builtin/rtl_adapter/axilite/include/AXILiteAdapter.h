@@ -1,12 +1,8 @@
 #pragma once
 
-#include "sdk/symbol_attr.h"
 #include "sdk/interface/dev_if.h"
 #include "sdk/interface/digital_if.h"
 
-//#include "VTop.h"
-
-//class NOAPI VTop;
 namespace Base_ns {
 
 class AXILiteAdapter : public Interface_ns::Triggerable_I, public Interface_ns::SlaveIO_I {
@@ -20,39 +16,23 @@ public:
 
 private:
     typedef uint8_t axilite_resp_t;
-
     const int BIT_WIDTH;
-
     size_t byteSize;
-
-
     class ModuleIf;
-//    class Write_AddrChannel;
-//    class Write_DataChannel;
-//    class Write_RespChannel;
-//    class Read_AddrChannel;
-//    class Read_DataChannel;
-
-    class TopImpl;
+    struct TopImpl;
     TopImpl* topImpl;       // Use Pointer to Implementation to hide class `VTop`
-
-//    VTop* topModule;
     ModuleIf* moduleIf;
-//    Write_AddrChannel* writeAddrCh;
     bool useTickClock;
-
     void axiClkCycle();
 
     axilite_resp_t axiliteStore4B(uint32_t addr, uint8_t wstrb, uint32_t val);
     axilite_resp_t axiliteStore8B(uint64_t addr, uint8_t wstrb, uint64_t val);
 
 public:
-
+    // ----- Implementation of interface `SlaveIO_I`
     int load(Interface_ns::addr_t begin_addr, uint64_t len, uint8_t *buffer) override;
-
     int store(Interface_ns::addr_t begin_addr, uint64_t len, const uint8_t *buffer) override;
-
-
+    // ----- Implementation of interface `Triggerable_I`
     /*
      * @note The adapter will not depend on the `tick` function, it is reserved for the module's main clock.
      * @note The bus clock is handled independently by the adapter, in the `load`/`store` function.

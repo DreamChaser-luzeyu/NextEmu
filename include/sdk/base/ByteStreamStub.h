@@ -1,10 +1,16 @@
 #pragma once
-
+// ----- SYS
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
+// ----- STL
+#include <cstdio>
+#include <cstdlib>
+#include <unistd.h>
+// ----- SDK
 #include "sdk/interface/interconnect.h"
+#include "sdk/console.h"
 
 namespace Base_ns {
 
@@ -18,7 +24,8 @@ private:
     struct sockaddr_in address;
 
 public:
-    explicit ByteStreamStub(uint16_t port, const char *in_addr = nullptr): serverFd(-1), commFd(-1), txFile(nullptr) {
+    explicit ByteStreamStub(uint16_t port, const char *in_addr = nullptr) : serverFd(-1), commFd(-1), txFile(nullptr),
+                                                                            rxFile(nullptr), address({}) {
         // --- Create LISTEN socket
         if ((serverFd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
             perror("socket failed");
@@ -30,7 +37,7 @@ public:
         else { address.sin_addr.s_addr = INADDR_ANY; }
         address.sin_port = htons(port);
         // --- Bind address
-        if (bind(serverFd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        if (bind(serverFd, (struct sockaddr *) &address, sizeof(address)) < 0) {
             perror("bind failed");
             exit(EXIT_FAILURE);
         }
@@ -44,35 +51,34 @@ public:
     void waitForConnection() {
         int addrlen = sizeof(address);
         LOG_INFO("ByteStreamStub: Waiting for connections...\n");
-        if ((commFd = accept(serverFd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
+        if ((commFd = accept(serverFd, (struct sockaddr *) &address, (socklen_t *) &addrlen)) < 0) {
             perror("accept");
             exit(EXIT_FAILURE);
         }
         txFile = fdopen(commFd, "r+");
         rxFile = fdopen(commFd, "r+");
-        if(!txFile) LOG_ERRNO_AND_EXIT("fdopen() failed");
-        if(!rxFile) LOG_ERRNO_AND_EXIT("fdopen() failed");
+        if (!txFile) LOG_ERRNO_AND_EXIT("fdopen() failed");
+        if (!rxFile) LOG_ERRNO_AND_EXIT("fdopen() failed");
     }
 
     int putc(int c) override {
-        if(!txFile) {
-            LOG_WARN("Try writing %02x to bytestream %s", (uint8_t)c, "default desc");
+        if (!txFile) {
+            LOG_WARN("Try writing %02x to bytestream %s", (uint8_t) c, "default desc");
             return EOF;
         }
         int fb = fputc(c, txFile);
-//        LOG_DEBUG("fputc %c", (char)c);
         fflush(txFile);
         return fb;
     }
 
     int getc() override {
-        if(commFd == -1) waitForConnection();
+        if (commFd == -1) waitForConnection();
         return fgetc(rxFile);
     }
 
     ~ByteStreamStub() {
-        if(commFd != -1) close(commFd);
-        if(serverFd != -1) close(serverFd);
+        if (commFd != -1) close(commFd);
+        if (serverFd != -1) close(serverFd);
     }
 };
 
