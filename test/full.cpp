@@ -33,6 +33,7 @@ public:
 
     bool finished() override { return false; }
 };
+
 TEST_CASE(test_spike_main, "A test of Spike main() func") {
     // ----- ByteStreamStub for external connect to stream-based device
     auto* stream_stub = new Base_ns::ByteStreamStub(12346, "127.0.0.1");
@@ -63,19 +64,13 @@ TEST_CASE(test_spike_main, "A test of Spike main() func") {
     // ----- Construct `uartlite_rtl` Test Console (input-only)
     //   --- Construct UART Waveform Generator
     auto ue = UartTester(1000000, 9600);
-    UartliteRtl_ns::ModuleIf_t moduleIf;
-    moduleIf.sig_uart_rx = ue.getSignal(0);
     //   --- Construct ClockDriver for UART Waveform Generator
     using Base_ns::ClkDrive;
     ClkDrive clk1(100, true, true, "UART waveform bench clock");
     clk1.regTickObj((Interface_ns::Triggerable_I *) (&ue));
-    //   --- Construct `uartlite_rtl` Module
-    auto uartlite_rtl = UartliteRtl_ns::UartRTL(moduleIf, p);
-    bus->addDev((Interface_ns::SlaveIO_I *) (&uartlite_rtl), 0x60200000);
     //   --- ClockDrive used for uartlite rtl
     using Base_ns::ClkDrive;
     ClkDrive clk2(200, true, true, "uartlite rtl clock");
-//    clk2.regTickObj((Interface_ns::Triggerable_I *) (&uartlite_rtl));
 
     // ----- Construct a dummy device for debug
     auto dummy_dev = Builtin_ns::DummyDev("test");
@@ -110,7 +105,5 @@ TEST_CASE(test_spike_main, "A test of Spike main() func") {
 //            uart_rtl.store(2, 1, &rx_recv_done);
 //        }
 //    }
-
     p->run();
-
 }

@@ -55,40 +55,39 @@ private:
 //    Interface_ns::SlaveAtomicIO_I* sv39MMU = nullptr;
 
     // ----- Registers
-    int64_t GPR[32];                                   // General purpose registers
+    int64_t GPR[32];                        // General purpose registers
     // ----- CSRs
     // --- M_MODE CSRs
     uint64_t csrMCycleNum;
-
-    uint64_t csrMIntDelegation;         ///< mideleg, Machine-level Interrupt Delegation Register
-    ///< Used as a mask, indicating which traps to be routed to S_MODE
-    uint64_t csrMExceptionDelegation;   // medeleg, Machine-level Exception Delegation Register
-    uint64_t csrMachineTrapVal;         // mtval,   Machine Trap Value Register
-    CSReg_Cause_t csrMachineCause;           // mcause
-    uint64_t csrMExceptionPC;           // mepc
-    CSReg_TrapVector_t csrMTrapVecBaseAddr;       // mtvec
-    CSR_CounterEN_t csrMCounterEN;             // mcounteren
-    CSR_MISA_t csrMachineISA;             // misa
-    uint64_t csrMscratch;               // mscratch
+    uint64_t csrMIntDelegation;             ///< mideleg, Machine-level Interrupt Delegation Register
+                                            ///< Used as a mask, indicating which traps to be routed to S_MODE
+    uint64_t csrMExceptionDelegation;       // medeleg, Machine-level Exception Delegation Register
+    uint64_t csrMachineTrapVal;             // mtval,   Machine Trap Value Register
+    CSReg_Cause_t csrMachineCause;          // mcause
+    uint64_t csrMExceptionPC;               // mepc
+    CSReg_TrapVector_t csrMTrapVecBaseAddr; // mtvec
+    CSR_CounterEN_t csrMCounterEN;          // mcounteren
+    CSR_MISA_t csrMachineISA;               // misa
+    uint64_t csrMscratch;                   // mscratch
     // --- S_MODE CSRs
-    uint64_t csrSupervisorTrapVal;      // stval
-    CSReg_Cause_t csrSupervisorCause;        // scause
-    uint64_t csrSExceptionPC;           // sepc
-    CSReg_TrapVector_t csrSTrapVecBaseAddr;       // stvec
-    CSR_CounterEN_t csrSCounterEN;             // scounteren
-    uint64_t csrSscratch;               // sscratch
+    uint64_t csrSupervisorTrapVal;          // stval
+    CSReg_Cause_t csrSupervisorCause;       // scause
+    uint64_t csrSExceptionPC;               // sepc
+    CSReg_TrapVector_t csrSTrapVecBaseAddr; // stvec
+    CSR_CounterEN_t csrSCounterEN;          // scounteren
+    uint64_t csrSscratch;                   // sscratch
     // --- Shared CSRs
     uint64_t minstret;
     // The sstatus register is a subset of the mstatus register.
     // In a straightforward implementation, reading or writing any field in sstatus is equivalent to
     // reading or writing the homonymous field in mstatus.
-    uint64_t status;                    // mstatus, sstatus
+    uint64_t status;                        // mstatus, sstatus
     uint64_t rvHartID;
     SATP_Reg_t satp;
     // Restricted views of the mip and mie registers appear as the sip and sie registers for supervisor
     // level.
-    CSReg_IntPending_t csrIntPending;             // mip, sip
-    uint64_t csrIntEnable;              // mie, sie TODO: mask?
+    CSReg_IntPending_t csrIntPending;       // mip, sip
+    uint64_t csrIntEnable;                  // mie, sie TODO: mask?
     uint64_t trapProgramCounter;
     uint64_t currentProgramCounter;
 

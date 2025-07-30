@@ -22,7 +22,7 @@ bool RVCore_ns::RV64Core::memRead(uint64_t start_addr, uint64_t size, uint8_t *b
                                            (va_err == VADDR_MIS_ALIGN) ? exec_load_misalign :
                                            (va_err == VADDR_PAGE_FAULT) ? exec_load_pgfault : exec_ok;
         assert(feedback != exec_ok);
-        raiseTrap({ .cause = feedback, .interrupt = 0 }, start_addr);
+        raiseTrap({ .cause = (uint64_t)feedback, .interrupt = 0 }, start_addr);
         return false;
     }
 }
@@ -41,7 +41,7 @@ bool RVCore_ns::RV64Core::memWrite(uint64_t start_addr, uint64_t size, const uin
                                            (va_err == VADDR_MIS_ALIGN) ? exec_store_misalign :
                                            (va_err == VADDR_PAGE_FAULT) ? exec_store_pgfault : exec_ok;
         assert(feedback != exec_ok);
-        raiseTrap({ .cause = feedback, .interrupt = 0 }, start_addr);
+        raiseTrap({ .cause = (uint64_t)feedback, .interrupt = 0 }, start_addr);
         return false;
     }
 }

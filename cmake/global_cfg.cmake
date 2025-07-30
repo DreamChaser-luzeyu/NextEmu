@@ -1,1 +1,2 @@
-set(VERILATOR_PATH /usr/local/share/verilator)
+# VERILATOR_ROOT
+set(VERILATOR_ROOT /usr/share/verilator)

@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <map>
 #include <cstring>
+#include <stdexcept>
 #include "sdk/interface/dev_if.h"
 
 

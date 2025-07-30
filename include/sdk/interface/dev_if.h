@@ -28,7 +28,7 @@ public:
 };
 
 class MasterIO_I {
-private:
+public:
     MasterIO_I() = delete;
 protected:
     SlaveIO_I* subBus;

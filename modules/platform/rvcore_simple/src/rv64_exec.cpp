@@ -69,8 +69,7 @@ void RVCore_ns::RV64Core::step() {
                 }
                 break;
             }
-                // B-Type Instructions
-            case OPCODE_BRANCH: {
+            case OPCODE_BRANCH: { // B-Type Instructions
                 int64_t offset = (inst.b_type.imm_12 << 12) | (inst.b_type.imm_11 << 11) | (inst.b_type.imm_10_5 << 5) | (inst.b_type.imm_4_1 << 1);
                 uint64_t npc;
                 switch (inst.b_type.funct3) {
@@ -186,8 +185,7 @@ void RVCore_ns::RV64Core::step() {
                 }
                 break;
             }
-                // S-Type Instructions
-            case OPCODE_STORE: {
+            case OPCODE_STORE: {  // S-Type Instructions
                 uint64_t mem_addr = GPR[inst.s_type.rs1] + ( (inst.s_type.imm_11_5 << 5) | (inst.s_type.imm_4_0));
                 switch (inst.i_type.funct3) {
                     case FUNCT3_SB: {
@@ -215,8 +213,7 @@ void RVCore_ns::RV64Core::step() {
                 }
                 break;
             }
-                // I-Type Instructions
-            case OPCODE_OPIMM: {
+            case OPCODE_OPIMM: {  // I-Type Instructions
                 int64_t imm = inst.i_type.imm12;
                 Funct6_Op_enum fun6 = (Funct6_Op_enum)((inst.r_type.funct7) >> 1);
                 ALU_Op_enum op;
@@ -261,8 +258,7 @@ void RVCore_ns::RV64Core::step() {
                 }
                 break;
             }
-                // I-Type Instructions, would be cut to 32 bits
-            case OPCODE_OPIMM32: {
+            case OPCODE_OPIMM32: {  // I-Type Instructions, would be cut to 32 bits
                 int64_t imm = inst.i_type.imm12;
                 Funct7_Op_enum fun7 = (Funct7_Op_enum)((inst.r_type.funct7));
                 ALU_Op_enum op;
@@ -291,8 +287,7 @@ void RVCore_ns::RV64Core::step() {
                 }
                 break;
             }
-                // R-Type Instructions
-            case OPCODE_OP: {
+            case OPCODE_OP: {  // R-Type Instructions
                 ALU_Op_enum op = ALU_NOP;
                 switch (inst.r_type.funct7) {
                     case FUNCT7_NORMAL: {
@@ -379,8 +374,7 @@ void RVCore_ns::RV64Core::step() {
                 }
                 break;
             }
-                // R-Type Instructions, would be cut to 32 bits
-            case OPCODE_OP32: {
+            case OPCODE_OP32: {  // R-Type Instructions, would be cut to 32 bits
                 ALU_Op_enum op = ALU_NOP;
                 switch (inst.r_type.funct7) {
                     case FUNCT7_NORMAL: {
@@ -443,8 +437,7 @@ void RVCore_ns::RV64Core::step() {
                 }
                 break;
             }
-            // R-Type Instructions, Atomic Memory Operations
-            case OPCODE_AMO: {
+            case OPCODE_AMO: {  // R-Type Instructions, Atomic Memory Operations
                 uint8_t funct5 = (inst.r_type.funct7) >> 2;
                 if (inst.r_type.funct3 != 0b010 && inst.r_type.funct3 != 0b011) {
                     is_instr_illegal = true;
@@ -464,7 +457,7 @@ void RVCore_ns::RV64Core::step() {
 
                                 if (exc == exec_ok) setGPR(inst.r_type.rd, result);
                                 else {
-                                    raiseTrap({ .cause = exc, .interrupt = 0 },GPR[inst.r_type.rs1]);
+                                    raiseTrap({ .cause = (uint64_t)exc, .interrupt = 0 },GPR[inst.r_type.rs1]);
                                 }
                             }
                             else/* if(inst.r_type.funct3 == 0b010)*/ {
@@ -494,7 +487,7 @@ void RVCore_ns::RV64Core::step() {
                                                                                      result);
                         if (exc == exec_ok) setGPR(inst.r_type.rd, result);
                         else {
-                            raiseTrap({ .cause = exc, .interrupt = 0 }, GPR[inst.r_type.rs1]);
+                            raiseTrap({ .cause = (uint64_t)exc, .interrupt = 0 }, GPR[inst.r_type.rs1]);
                         }
                         break;
                     }
@@ -508,7 +501,7 @@ void RVCore_ns::RV64Core::step() {
                                                                                        result);
                         if (exc == exec_ok) setGPR(inst.r_type.rd, result);
                         else {
-                            raiseTrap({ .cause = exc, .interrupt = 0 }, GPR[inst.r_type.rs1]);
+                            raiseTrap({ .cause = (uint64_t)exc, .interrupt = 0 }, GPR[inst.r_type.rs1]);
                         }
                         break;
                     }

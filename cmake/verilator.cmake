@@ -8,7 +8,7 @@ function(VerilatorBuild rtl_file_list)
     execute_process(COMMAND rm -rf obj_dir WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/rtl")
     # ----- Generate classes
     foreach (RTL_SRC_FILE ${rtl_file_list})
-        message("    ${RTL_SRC_FILE}")
+        message("    verilator --cc --trace ${RTL_SRC_FILE}")
         execute_process(
                 COMMAND verilator --cc --trace ${RTL_SRC_FILE}
                 WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/rtl"
