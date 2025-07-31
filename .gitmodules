@@ -1,0 +1,14 @@
+[submodule "misc/riscv-gnu-toolchain"]
+	path = misc/riscv-gnu-toolchain
+	url = https://github.com/riscv-collab/riscv-gnu-toolchain.git
+[submodule "misc/opensbi"]
+	path = misc/opensbi
+	url = https://github.com/riscv-software-src/opensbi.git
+[submodule "misc/linux-6.6"]
+	path = misc/linux-6.6
+	url = https://github.com/torvalds/linux.git
+	branch = ffc253263a1375a65fa6c9f62a893e9767fbebfa
+[submodule "misc/busybox"]
+	path = misc/busybox
+	url = https://github.com/mirror/busybox.git
+	branch = 1_36_stable
