@@ -13,6 +13,7 @@ cmake-build*/
 **/rtl/include/
 **/rtl/include/*
 misc/riscv-isa-sim/
+misc/riscv-gnu-toolchain/install
 modules/device/uart_rtl/rtl/obj_dir/VUartRx__verFiles.dat
 modules/device/uart_rtl/rtl/obj_dir/VTop__verFiles.dat
 misc/axi/
