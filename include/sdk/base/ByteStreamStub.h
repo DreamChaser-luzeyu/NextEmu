@@ -37,6 +37,11 @@ public:
         else { address.sin_addr.s_addr = INADDR_ANY; }
         address.sin_port = htons(port);
         // --- Bind address
+        int optval = 1;
+        if((setsockopt(serverFd,SOL_SOCKET, SO_REUSEPORT, &optval,sizeof(optval)))<0) {
+            perror("setsockopt failed");
+            exit(EXIT_FAILURE);
+        }
         if (bind(serverFd, (struct sockaddr *) &address, sizeof(address)) < 0) {
             perror("bind failed");
             exit(EXIT_FAILURE);

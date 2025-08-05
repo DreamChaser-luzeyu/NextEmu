@@ -73,7 +73,9 @@ public:
             char c = tx.front();
             tx.pop();
             if (tx.empty()) waitACK = true;
-            if(streamStub) streamStub->putc(c);
+            if(streamStub) {
+                streamStub->putc(c);
+            }
             else putchar(c);
         }
         fflush(stdout);
@@ -100,7 +102,10 @@ public:
         std::unique_lock<std::mutex> locker(rxMutex); // To be released on return
         if (unlikely(begin_addr + len > sizeof(regs))) {
             LOG_ERR("Uartlite: Invalid address 0x%08lx", begin_addr);
-            assert(false);
+            // assert(false);
+            for (size_t i = 0; i < len; i++) {
+                buffer[i] = 0;
+            }
             return Interface_ns::FB_OUT_OF_RANGE;
         }
 

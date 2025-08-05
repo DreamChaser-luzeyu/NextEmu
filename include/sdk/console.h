@@ -44,9 +44,7 @@ const static char* CTRL_CLEAR  = "\033[2J";
 } while(0)
 
 #define LOG_ERRNO_AND_EXIT(err_desc) do { \
-    STDOUT_ACQUIRE_LOCK;                  \
     LOG_ERRNO(err_desc);                  \
-    STDOUT_RELEASE_LOCK;                  \
     exit(EXIT_FAILURE);                   \
 } while(0)
 

@@ -3,6 +3,7 @@
 #include <mutex>
 #include <SpikePlatform.hpp>
 #include <Uartlite.hpp>
+#include <example/minicpu_full_sys.h>
 #include <sdk/base/ByteStreamStub.h>
 
 #include "sdk/base/AddrBus.hpp"
@@ -41,7 +42,9 @@ int main() {
     // RUN_TEST_UNIT(RVCore_TestUnit);
 
     // ----- Run example
-    simple_full_sys_spike();
+    // simple_full_sys();
+    // simple_full_sys_spike();
+    simple_full_sys_minicpu();
 
     return 0;
 }

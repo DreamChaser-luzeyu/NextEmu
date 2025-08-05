@@ -1,6 +1,6 @@
-#include "RV64Core.h"
+#include "rvcore_minicpu/MiniCPUCore.h"
 
-void RVCore_ns::RV64Core::preExec() {
+void MiniCPU_ns::RV64Core::preExec() {
     // TODO: fill the raise trap
     // ----- Update CSRs
     this->csrMCycleNum++;
@@ -96,7 +96,7 @@ void RVCore_ns::RV64Core::preExec() {
     assert(0);  // Should never reach here
 }
 
-bool RVCore_ns::RV64Core::csrRead(RV_CSR_Addr_enum csr_index, uint64_t &csr_result) {
+bool MiniCPU_ns::RV64Core::csrRead(RV_CSR_Addr_enum csr_index, uint64_t &csr_result) {
     switch (csr_index) {
         case csr_mvendorid:
             csr_result = 0;
@@ -227,7 +227,7 @@ bool RVCore_ns::RV64Core::csrRead(RV_CSR_Addr_enum csr_index, uint64_t &csr_resu
     return true;
 }
 
-bool RVCore_ns::RV64Core::csrWrite(RV_CSR_Addr_enum csr_index, uint64_t csr_data) {
+bool MiniCPU_ns::RV64Core::csrWrite(RV_CSR_Addr_enum csr_index, uint64_t csr_data) {
     switch (csr_index) {
         case csr_mstatus: {
             CSReg_MStatus_t *nstatus = (CSReg_MStatus_t*)&csr_data;
@@ -347,7 +347,7 @@ bool RVCore_ns::RV64Core::csrWrite(RV_CSR_Addr_enum csr_index, uint64_t csr_data
     return true;
 }
 
-bool RVCore_ns::RV64Core::csrSetbit(RV_CSR_Addr_enum csr_index, uint64_t csr_mask) {
+bool MiniCPU_ns::RV64Core::csrSetbit(RV_CSR_Addr_enum csr_index, uint64_t csr_mask) {
     uint64_t tmp;
     bool ret = csrRead(csr_index, tmp);
     if (unlikely(!ret)) return false;
@@ -356,7 +356,7 @@ bool RVCore_ns::RV64Core::csrSetbit(RV_CSR_Addr_enum csr_index, uint64_t csr_mas
     return ret;
 }
 
-bool RVCore_ns::RV64Core::csrClearbit(RV_CSR_Addr_enum csr_index, uint64_t csr_mask) {
+bool MiniCPU_ns::RV64Core::csrClearbit(RV_CSR_Addr_enum csr_index, uint64_t csr_mask) {
     uint64_t tmp;
     bool ret = csrRead(csr_index, tmp);
     if (unlikely(!ret)) return false;
@@ -365,13 +365,13 @@ bool RVCore_ns::RV64Core::csrClearbit(RV_CSR_Addr_enum csr_index, uint64_t csr_m
     return ret;
 }
 
-bool RVCore_ns::RV64Core::csr_op_permission_check(uint16_t csr_index, bool write) {
+bool MiniCPU_ns::RV64Core::csr_op_permission_check(uint16_t csr_index, bool write) {
     if (unlikely(((csr_index >> 8) & 3) > currentPrivMode)) return false;
     if (unlikely((((csr_index >> 10) & 3) == 3) && write)) return false;
     return true;
 }
 
-void RVCore_ns::RV64Core::raiseTrap(CSReg_Cause_t cause, uint64_t tval)
+void MiniCPU_ns::RV64Core::raiseTrap(CSReg_Cause_t cause, uint64_t tval)
 {
     assert(!this->needTrap);
     assert(cause.cause != exec_ok);
@@ -430,17 +430,17 @@ void RVCore_ns::RV64Core::raiseTrap(CSReg_Cause_t cause, uint64_t tval)
     if(cause.cause == exec_instr_pgfault && tval == trapProgramCounter) { assert(false); }
 }
 
-void RVCore_ns::RV64Core::ecall() {
+void MiniCPU_ns::RV64Core::ecall() {
 //    assert((currentPrivMode | 0b100) == (currentPrivMode + 8));
 //    raiseTrap({ .cause = (uint64_t)(currentPrivMode | 0b100), .interrupt = 0 });
     raiseTrap({ .cause = (uint64_t)(currentPrivMode + 8), .interrupt = 0 });
 }
 
-void RVCore_ns::RV64Core::ebreak() {
+void MiniCPU_ns::RV64Core::ebreak() {
     raiseTrap({ .cause = exec_breakpoint, .interrupt = 0 });
 }
 
-bool RVCore_ns::RV64Core::mret() {
+bool MiniCPU_ns::RV64Core::mret() {
     if(currentPrivMode != M_MODE) { return false; }
     CSReg_MStatus_t* csrMachineStatus = (CSReg_MStatus_t *)(&status);
     csrMachineStatus->mie = csrMachineStatus->mpie;
@@ -453,7 +453,7 @@ bool RVCore_ns::RV64Core::mret() {
     return true;
 }
 
-bool RVCore_ns::RV64Core::sret() {
+bool MiniCPU_ns::RV64Core::sret() {
     if(unlikely(currentPrivMode < S_MODE)) { return false; }
     CSReg_MStatus_t* csrMachineStatus = (CSReg_MStatus_t *)(&status);
     CSReg_SStatus_t* csrSupervisorStatus = (CSReg_SStatus_t *)(&status);
@@ -468,7 +468,7 @@ bool RVCore_ns::RV64Core::sret() {
     return true;
 }
 
-bool RVCore_ns::RV64Core::sfence_vma(uint64_t vaddr, uint64_t asid) {
+bool MiniCPU_ns::RV64Core::sfence_vma(uint64_t vaddr, uint64_t asid) {
     const CSReg_MStatus_t *mstatus = (CSReg_MStatus_t *)&status;
     if (unlikely(currentPrivMode < S_MODE || (currentPrivMode == S_MODE && mstatus->tvm))) return false;
     ((RV64SV39_MMU*)subBus)->SV39_FlushTLB_sfence_vma(vaddr,asid);

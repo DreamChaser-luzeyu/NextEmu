@@ -2,10 +2,7 @@
 
 #include "sdk/interface/dev_if.h"
 
-#include <cstring>
-#include <RV64Core.h>
-
-namespace RVCore_ns {
+namespace MiniCPU_ns {
 
 template<unsigned int nr_hart = 1>
 class CLInt : public Interface_ns::SlaveIO_I,

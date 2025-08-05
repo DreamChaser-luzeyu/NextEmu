@@ -12,3 +12,6 @@
 	path = misc/busybox
 	url = https://github.com/mirror/busybox.git
 	branch = 1_36_stable
+[submodule "misc/RVVM"]
+	path = misc/RVVM
+	url = https://github.com/LekKit/RVVM.git

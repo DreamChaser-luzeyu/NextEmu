@@ -9,12 +9,13 @@
 #include "sdk/interface/dev_if.h"
 #include "sdk/symbol_attr.h"
 #include "sdk/interface/struct_defs.h"
-#include "RV64SV39_MMU.h"
-#include "misc/rv64_structs.h"
-#include "misc/rv64_csr_structs.h"
+#include "rvcore_minicpu/RV64SV39_MMU.h"
+#include "rvcore_minicpu/misc/rv64_structs.h"
+#include "rvcore_minicpu/misc/rv64_csr_structs.h"
 #include "sdk/interface/status_enum.h"
+#include "sdk/interface/core_if.h"
 
-namespace RVCore_ns {
+namespace MiniCPU_ns {
 enum ALU_Op_enum {
     ALU_ADD, ALU_SUB, ALU_SLL, ALU_SLT, ALU_SLTU, ALU_XOR, ALU_SRL, ALU_SRA, ALU_OR, ALU_AND,
     ALU_MUL, ALU_MULH, ALU_MULHU, ALU_MULHSU, ALU_DIV, ALU_DIVU, ALU_REM, ALU_REMU,
@@ -30,7 +31,8 @@ struct IntStatus {
 typedef IntStatus IntStatus_t;
 
 
-class RV64Core : public Interface_ns::MasterAtomicIO_I, public Interface_ns::Runnable_I {
+class RV64Core : public Interface_ns::MasterAtomicIO_I,
+                 public Interface_ns::Runnable_I, public Interface_ns::Debuggable_I {
     // ----- Fields
 public:
     IntStatus_t *intStatus;
@@ -38,6 +40,7 @@ public:
 //    std::unordered_set<uint64_t> watchPointPCs;
 private:
     // ----- Constants
+    const static size_t   NR_CTX = 4;
     const uint64_t S_MODE_INT_MASK = (1ull << int_s_ext) | (1ull << int_s_sw) | (1ull << int_s_timer);
     const uint64_t COUNTER_MASK = (1 << 0) | (1 << 2);
     const uint64_t S_MODE_EXC_MASK = (1 << 16) - 1 - (1 << exec_ecall_from_machine);
@@ -54,8 +57,14 @@ private:
 
 //    Interface_ns::SlaveAtomicIO_I* sv39MMU = nullptr;
 
-    // ----- Registers
-    int64_t GPR[32];                        // General purpose registers
+    typedef struct MiniCPUCtx {
+        // ----- Registers
+        int64_t GPR[32];                    // General purpose registers
+    } MiniCPUCtx_t;
+
+    MiniCPUCtx_t ctx[NR_CTX];
+    size_t currentCtx = 0;
+
     // ----- CSRs
     // --- M_MODE CSRs
     uint64_t csrMCycleNum;
@@ -101,20 +110,27 @@ public:
 
     int run() override;
 
-    FuncReturnFeedback_e DumpProgramCounter_CoreAPI(RegisterItem_t &reg);
+    void reset();
 
-    FuncReturnFeedback_e writeProgramCounter(RegItemVal_t reg_val);
+    FuncReturnFeedback_e DumpProgramCounter_DebugAPI(RegisterItem_t &reg) override;
+
+    FuncReturnFeedback_e WriteProgramCounter_DebugAPI(RegItemVal_t reg_val) override;
 
     FuncReturnFeedback_e setGPRByIndex(uint8_t gpr_index, int64_t val);
 
-    FuncReturnFeedback_e MemRead_CoreDebugAPI(uint64_t start_addr, uint64_t size, uint8_t *buffer);
+    FuncReturnFeedback_e MemRead_DebugAPI(uint64_t start_addr, uint64_t size, uint8_t *buffer) override;
 
-    FuncReturnFeedback_e MemWrite_CoreDebugAPI(uint64_t start_addr,
-                                               uint64_t size, const uint8_t *buffer);
+    FuncReturnFeedback_e MemWrite_DebugAPI(uint64_t start_addr,
+                                               uint64_t size, const uint8_t *buffer) override;
 
-    FuncReturnFeedback_e DumpRegister_CoreAPI(std::vector<RegisterItem_t> &regs);
+    FuncReturnFeedback_e DumpAllRegister_DebugAPI(std::vector<RegisterItem_t> &regs) override;
 
-    FuncReturnFeedback_e WriteAllRegister_CoreAPI(const std::vector<RegisterItem_t> &regs);
+    FuncReturnFeedback_e WriteAllRegister_DebugAPI(const std::vector<RegisterItem_t> &regs) override;
+
+    FuncReturnFeedback_e Step_DebugAPI() override {
+        step();
+        return MEMU_OK;
+    }
 
     RV64Core(Interface_ns::SlaveAtomicIO_I *bus, uint16_t hart_id) :
             rvHartID(hart_id), csrMCycleNum(0), needTrap(false),
@@ -136,7 +152,7 @@ private:
 
     void setGPR(uint8_t GPR_index, int64_t value) {
         assert(GPR_index >= 0 && GPR_index < 32);
-        if (likely(GPR_index)) GPR[GPR_index] = value;
+        if (likely(GPR_index)) ctx[currentCtx].GPR[GPR_index] = value;
     }
 
     bool memRead(uint64_t start_addr, uint64_t size, uint8_t *buffer);
@@ -163,6 +179,6 @@ private:
 
     bool csr_op_permission_check(uint16_t csr_index, bool write);
 
-    void reset();
+
 };
 }

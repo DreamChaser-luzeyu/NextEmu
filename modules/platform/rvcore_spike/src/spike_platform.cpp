@@ -14,6 +14,8 @@ SpikePlatform::SpikePlatform(Base_ns::AddrBus *bus) : Interface_ns::MasterIO_I(
     const char *argv[] = {"./spike",
                           "-p2",
                           "--isa=rv64imac_zicsr",
+                          // "--isa=rv64ima_zicsr",
+                          // "--isa=rv64ima_zicsr_zifencei",
                           "--real-time-clint",
                           "--pc=0x80000000",
                           "--pmpregions=0",

@@ -584,6 +584,9 @@ void RVCore_ns::RV64Core::step() {
                         break;
                     }
                     case FUNCT3_CSRRS: {
+                        // if (inst.val == 3222284275u) { // csrrs time
+                        //     printf("Found you! \n");
+                        // }
                         // csrrs CSR Read and Set, t=CSRs[csr]; CSRs[csr] = t|x[rs1]; x[rd]=t
                         RV_CSR_Addr_enum csr_index = static_cast<RV_CSR_Addr_enum>(inst.i_type.imm12&((1<<12)-1));
                         is_instr_illegal = !csr_op_permission_check(csr_index, inst.i_type.rs1 != 0);

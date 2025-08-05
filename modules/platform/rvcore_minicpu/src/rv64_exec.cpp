@@ -33,7 +33,7 @@ void MiniCPU_ns::RV64Core::step() {
         switch (inst.r_type.opcode) {
             case OPCODE_LOAD_ASYNC: {
                 LOG_DEBUG("MiniCPU Async Load: %08x", inst.val);
-                uint64_t mem_addr = GPR[inst.i_type.rs1] + (inst.i_type.imm12);
+                uint64_t mem_addr = ctx[currentCtx].GPR[inst.i_type.rs1] + (inst.i_type.imm12);
                 switch (inst.i_type.funct3) {
                     case FUNCT3_LB: {
                         // Load Byte, x[rd] = sext(M[x[rs1] + sext(offset)][7:0])
@@ -92,26 +92,26 @@ void MiniCPU_ns::RV64Core::step() {
             }
             case OPCODE_STORE_ASYNC: {
                 LOG_DEBUG("MiniCPU Async Store: %08x", inst.val);
-                uint64_t mem_addr = GPR[inst.s_type.rs1] + ( (inst.s_type.imm_11_5 << 5) | (inst.s_type.imm_4_0));
+                uint64_t mem_addr = ctx[currentCtx].GPR[inst.s_type.rs1] + ( (inst.s_type.imm_11_5 << 5) | (inst.s_type.imm_4_0));
                 switch (inst.i_type.funct3) {
                     case FUNCT3_SB: {
                         // Store Byte, M[x[rs1]+sext(offset)=x[rs2][7:0]
-                        memWrite(mem_addr, 1, (unsigned char *) &GPR[inst.s_type.rs2]);
+                        memWrite(mem_addr, 1, (unsigned char *) &ctx[currentCtx].GPR[inst.s_type.rs2]);
                         break;
                     }
                     case FUNCT3_SH: {
                         // Store Halfword, M[x[rs1]+sext(offset)=x[rs2][15:0]
-                        memWrite(mem_addr, 2, (unsigned char *) &GPR[inst.s_type.rs2]);
+                        memWrite(mem_addr, 2, (unsigned char *) &ctx[currentCtx].GPR[inst.s_type.rs2]);
                         break;
                     }
                     case FUNCT3_SW: {
                         // Store Word, M[x[rs1]+sext(offset)=x[rs2][31:0]
-                        memWrite(mem_addr, 4, (unsigned char *) &GPR[inst.s_type.rs2]);
+                        memWrite(mem_addr, 4, (unsigned char *) &ctx[currentCtx].GPR[inst.s_type.rs2]);
                         break;
                     }
                     case FUNCT3_SD: {
                         // Store Doubleword, M[x[rs1]+sext(offset)=x[rs2][63:0]
-                        memWrite(mem_addr, 8, (unsigned char *) &GPR[inst.s_type.rs2]);
+                        memWrite(mem_addr, 8, (unsigned char *) &ctx[currentCtx].GPR[inst.s_type.rs2]);
                         break;
                     }
                     default:
@@ -144,10 +144,10 @@ void MiniCPU_ns::RV64Core::step() {
             }
             case OPCODE_JALR: {
                 // Jump And Link Register, t = pc+4; pc=(x[rs1]+sext(offset))&(~1); x[rd]=t
-                uint64_t npc = GPR[inst.i_type.rs1] + (inst.i_type.imm12 & (~1));
+                uint64_t npc = ctx[currentCtx].GPR[inst.i_type.rs1] + (inst.i_type.imm12 & (~1));
                 uint64_t tmp = inst.i_type.imm12;
                 if(tmp & 1) tmp ^= 1;
-                assert(npc == (GPR[inst.i_type.rs1] + tmp));
+                assert(npc == (ctx[currentCtx].GPR[inst.i_type.rs1] + tmp));
                 if (npc % PC_ALIGN) {
                     raiseTrap({ .cause = exec_instr_misalign, .interrupt = 0 }, npc);
                 }
@@ -164,7 +164,7 @@ void MiniCPU_ns::RV64Core::step() {
                 switch (inst.b_type.funct3) {
                     case FUNCT3_BEQ:
                         // Branch if Equal, if (rs1 == rs2) pc += sext(offset)
-                        if (GPR[inst.b_type.rs1] == GPR[inst.b_type.rs2]) {
+                        if (ctx[currentCtx].GPR[inst.b_type.rs1] == ctx[currentCtx].GPR[inst.b_type.rs2]) {
                             npc = currentProgramCounter + offset;
                             is_new_pc_set = true;
                         }
@@ -173,35 +173,35 @@ void MiniCPU_ns::RV64Core::step() {
                         // STFW for detailed explanation about pesudoinstruction.
                     case FUNCT3_BNE:
                         // Branch if Not Equal, if (rs1 ≠ rs2) pc += sext(offset)
-                        if (GPR[inst.b_type.rs1] != GPR[inst.b_type.rs2]) {
+                        if (ctx[currentCtx].GPR[inst.b_type.rs1] != ctx[currentCtx].GPR[inst.b_type.rs2]) {
                             npc = currentProgramCounter + offset;
                             is_new_pc_set = true;
                         }
                         break;
                     case FUNCT3_BLT:
                         // Branch if Less Than, if (rs1 <s rs2) pc += sext(offset)
-                        if (GPR[inst.b_type.rs1] < GPR[inst.b_type.rs2]) {
+                        if (ctx[currentCtx].GPR[inst.b_type.rs1] < ctx[currentCtx].GPR[inst.b_type.rs2]) {
                             npc = currentProgramCounter + offset;
                             is_new_pc_set = true;
                         }
                         break;
                     case FUNCT3_BGE:
                         // Branch if Greater than or Equal, if (rs1 ≥s rs2) pc += sext(offset)
-                        if (GPR[inst.b_type.rs1] >= GPR[inst.b_type.rs2]) {
+                        if (ctx[currentCtx].GPR[inst.b_type.rs1] >= ctx[currentCtx].GPR[inst.b_type.rs2]) {
                             npc = currentProgramCounter + offset;
                             is_new_pc_set = true;
                         }
                         break;
                     case FUNCT3_BLTU:
                         // Branch if Less Than Unsigned, if (rs1 <u rs2) pc += sext(offset)
-                        if ((uint64_t)GPR[inst.b_type.rs1] < (uint64_t)GPR[inst.b_type.rs2]) {
+                        if ((uint64_t)ctx[currentCtx].GPR[inst.b_type.rs1] < (uint64_t)ctx[currentCtx].GPR[inst.b_type.rs2]) {
                             npc = currentProgramCounter + offset;
                             is_new_pc_set = true;
                         }
                         break;
                     case FUNCT3_BGEU:
                         // Branch if Greater Than or Equal Unsigned, if (rs1 ≥u rs2) pc += sext(offset)
-                        if ((uint64_t)GPR[inst.b_type.rs1] >= (uint64_t)GPR[inst.b_type.rs2]) {
+                        if ((uint64_t)ctx[currentCtx].GPR[inst.b_type.rs1] >= (uint64_t)ctx[currentCtx].GPR[inst.b_type.rs2]) {
                             npc = currentProgramCounter + offset;
                             is_new_pc_set = true;
                         }
@@ -217,7 +217,7 @@ void MiniCPU_ns::RV64Core::step() {
                 break;
             }
             case OPCODE_LOAD: {
-                uint64_t mem_addr = GPR[inst.i_type.rs1] + (inst.i_type.imm12);
+                uint64_t mem_addr = ctx[currentCtx].GPR[inst.i_type.rs1] + (inst.i_type.imm12);
                 switch (inst.i_type.funct3) {
                     case FUNCT3_LB: {
                         // Load Byte, x[rd] = sext(M[x[rs1] + sext(offset)][7:0])
@@ -275,26 +275,26 @@ void MiniCPU_ns::RV64Core::step() {
                 break;
             }
             case OPCODE_STORE: {  // S-Type Instructions
-                uint64_t mem_addr = GPR[inst.s_type.rs1] + ( (inst.s_type.imm_11_5 << 5) | (inst.s_type.imm_4_0));
+                uint64_t mem_addr = ctx[currentCtx].GPR[inst.s_type.rs1] + ( (inst.s_type.imm_11_5 << 5) | (inst.s_type.imm_4_0));
                 switch (inst.i_type.funct3) {
                     case FUNCT3_SB: {
                         // Store Byte, M[x[rs1]+sext(offset)=x[rs2][7:0]
-                        memWrite(mem_addr, 1, (unsigned char *) &GPR[inst.s_type.rs2]);
+                        memWrite(mem_addr, 1, (unsigned char *) &ctx[currentCtx].GPR[inst.s_type.rs2]);
                         break;
                     }
                     case FUNCT3_SH: {
                         // Store Halfword, M[x[rs1]+sext(offset)=x[rs2][15:0]
-                        memWrite(mem_addr, 2, (unsigned char *) &GPR[inst.s_type.rs2]);
+                        memWrite(mem_addr, 2, (unsigned char *) &ctx[currentCtx].GPR[inst.s_type.rs2]);
                         break;
                     }
                     case FUNCT3_SW: {
                         // Store Word, M[x[rs1]+sext(offset)=x[rs2][31:0]
-                        memWrite(mem_addr, 4, (unsigned char *) &GPR[inst.s_type.rs2]);
+                        memWrite(mem_addr, 4, (unsigned char *) &ctx[currentCtx].GPR[inst.s_type.rs2]);
                         break;
                     }
                     case FUNCT3_SD: {
                         // Store Doubleword, M[x[rs1]+sext(offset)=x[rs2][63:0]
-                        memWrite(mem_addr, 8, (unsigned char *) &GPR[inst.s_type.rs2]);
+                        memWrite(mem_addr, 8, (unsigned char *) &ctx[currentCtx].GPR[inst.s_type.rs2]);
                         break;
                     }
                     default:
@@ -342,7 +342,7 @@ void MiniCPU_ns::RV64Core::step() {
                         assert(false);
                 }
                 if (!is_instr_illegal) {
-                    int64_t result = alu_exec(GPR[inst.r_type.rs1],imm,op);
+                    int64_t result = alu_exec(ctx[currentCtx].GPR[inst.r_type.rs1],imm,op);
                     setGPR(inst.r_type.rd, result);
                 }
                 break;
@@ -371,7 +371,7 @@ void MiniCPU_ns::RV64Core::step() {
                         is_instr_illegal = true;
                 }
                 if (!is_instr_illegal) {
-                    int64_t result = alu_exec(GPR[inst.r_type.rs1],imm,op,true);
+                    int64_t result = alu_exec(ctx[currentCtx].GPR[inst.r_type.rs1],imm,op,true);
                     setGPR(inst.r_type.rd, result);
                 }
                 break;
@@ -458,7 +458,7 @@ void MiniCPU_ns::RV64Core::step() {
                         is_instr_illegal = true;
                 }
                 if (!is_instr_illegal) {
-                    int64_t result = alu_exec(GPR[inst.r_type.rs1],GPR[inst.r_type.rs2],op);
+                    int64_t result = alu_exec(ctx[currentCtx].GPR[inst.r_type.rs1],ctx[currentCtx].GPR[inst.r_type.rs2],op);
                     setGPR(inst.r_type.rd, result);
                 }
                 break;
@@ -521,7 +521,7 @@ void MiniCPU_ns::RV64Core::step() {
                         is_instr_illegal = true;
                 }
                 if (!is_instr_illegal) {
-                    int64_t result = alu_exec(GPR[inst.r_type.rs1],GPR[inst.r_type.rs2],op,true);
+                    int64_t result = alu_exec(ctx[currentCtx].GPR[inst.r_type.rs1],ctx[currentCtx].GPR[inst.r_type.rs2],op,true);
                     setGPR(inst.r_type.rd, result);
                 }
                 break;
@@ -540,20 +540,20 @@ void MiniCPU_ns::RV64Core::step() {
                             if (inst.r_type.funct3 == 0b011) {
                                 // Load Reserved Doubleword, x[rd] = LoadReserved64(M[x[rs1]])
                                 int64_t result;
-                                RV64_ExecFeedbackCode_e exc = ((RV64SV39_MMU*)subBus)->vaddrLoadReserved(GPR[inst.r_type.rs1],
+                                RV64_ExecFeedbackCode_e exc = ((RV64SV39_MMU*)subBus)->vaddrLoadReserved(ctx[currentCtx].GPR[inst.r_type.rs1],
                                                                                          (1<<inst.r_type.funct3),
                                                                                          (uint8_t*)&result);
 
                                 if (exc == exec_ok) setGPR(inst.r_type.rd, result);
                                 else {
-                                    raiseTrap({ .cause = (uint64_t)exc, .interrupt = 0 },GPR[inst.r_type.rs1]);
+                                    raiseTrap({ .cause = (uint64_t)exc, .interrupt = 0 },ctx[currentCtx].GPR[inst.r_type.rs1]);
                                 }
                             }
                             else/* if(inst.r_type.funct3 == 0b010)*/ {
                                 // Load-Reserved Word, x[rd] = LoadReserved32(M[x[rs1]])
                                 assert(inst.r_type.funct3 == 0b010);
                                 int32_t result;
-                                RV64_ExecFeedbackCode_e exc = ((RV64SV39_MMU*)subBus)->vaddrLoadReserved(GPR[inst.r_type.rs1],
+                                RV64_ExecFeedbackCode_e exc = ((RV64SV39_MMU*)subBus)->vaddrLoadReserved(ctx[currentCtx].GPR[inst.r_type.rs1],
                                                                                          (1<<inst.r_type.funct3),
                                                                                          (uint8_t*)&result);
                                 if (exc == exec_ok) setGPR(inst.r_type.rd, result);
@@ -561,7 +561,7 @@ void MiniCPU_ns::RV64Core::step() {
                                     CSReg_Cause_t cause;
                                     cause.cause = exc;
                                     cause.interrupt = 0;
-                                    raiseTrap(cause, GPR[inst.r_type.rs1]);
+                                    raiseTrap(cause, ctx[currentCtx].GPR[inst.r_type.rs1]);
                                 }
                             }
                         }
@@ -570,27 +570,27 @@ void MiniCPU_ns::RV64Core::step() {
                     case AMOSC: {
                         // Store-Conditional <Size>, x[rd] = StoreConditional(M[x[rs1]], x[rs2])
                         bool result;
-                        RV64_ExecFeedbackCode_e exc = ((RV64SV39_MMU*)subBus)->vaddrStoreConditional(GPR[inst.r_type.rs1],
+                        RV64_ExecFeedbackCode_e exc = ((RV64SV39_MMU*)subBus)->vaddrStoreConditional(ctx[currentCtx].GPR[inst.r_type.rs1],
                                                                                      (1<<inst.r_type.funct3),
-                                                                                     (uint8_t*)&GPR[inst.r_type.rs2],
+                                                                                     (uint8_t*)&ctx[currentCtx].GPR[inst.r_type.rs2],
                                                                                      result);
                         if (exc == exec_ok) setGPR(inst.r_type.rd, result);
                         else {
-                            raiseTrap({ .cause = (uint64_t)exc, .interrupt = 0 }, GPR[inst.r_type.rs1]);
+                            raiseTrap({ .cause = (uint64_t)exc, .interrupt = 0 }, ctx[currentCtx].GPR[inst.r_type.rs1]);
                         }
                         break;
                     }
                     case AMOSWAP: case AMOADD: case AMOXOR: case AMOAND: case AMOOR: case AMOMIN: case AMOMAX: case AMOMINU: case AMOMAXU: {
                         // Atomic Memory Operation: <Op> <Size> , x[rd] = AMO(M[x[rs1]] op x[rs2])
                         int64_t result;
-                        RV64_ExecFeedbackCode_e exc = ((RV64SV39_MMU*)subBus)->vaddrAtomicMemOperation(GPR[inst.r_type.rs1],
+                        RV64_ExecFeedbackCode_e exc = ((RV64SV39_MMU*)subBus)->vaddrAtomicMemOperation(ctx[currentCtx].GPR[inst.r_type.rs1],
                                                                                        (1<<inst.r_type.funct3),
                                                                                        (AMO_Funct_enum)(funct5),
-                                                                                       GPR[inst.r_type.rs2],
+                                                                                       ctx[currentCtx].GPR[inst.r_type.rs2],
                                                                                        result);
                         if (exc == exec_ok) setGPR(inst.r_type.rd, result);
                         else {
-                            raiseTrap({ .cause = (uint64_t)exc, .interrupt = 0 }, GPR[inst.r_type.rs1]);
+                            raiseTrap({ .cause = (uint64_t)exc, .interrupt = 0 }, ctx[currentCtx].GPR[inst.r_type.rs1]);
                         }
                         break;
                     }
@@ -655,7 +655,7 @@ void MiniCPU_ns::RV64Core::step() {
                             case FUNCT7_SFENCE_VMA:
                                 // sfence.vma Signal the processor that software has modified the page table
                                 // TLB cache is needed to refresh
-                                is_instr_illegal = !sfence_vma(GPR[inst.r_type.rs1], GPR[inst.r_type.rs2] & 0xffff);
+                                is_instr_illegal = !sfence_vma(ctx[currentCtx].GPR[inst.r_type.rs1], ctx[currentCtx].GPR[inst.r_type.rs2] & 0xffff);
                                 break;
                             default:
                                 is_instr_illegal = true;
@@ -668,7 +668,7 @@ void MiniCPU_ns::RV64Core::step() {
                         is_instr_illegal = !csr_op_permission_check(csr_index, true);
                         uint64_t csr_result;
                         if (!is_instr_illegal) is_instr_illegal = !csrRead(csr_index, csr_result);
-                        if (!is_instr_illegal) is_instr_illegal = !csrWrite(csr_index, GPR[inst.i_type.rs1]);
+                        if (!is_instr_illegal) is_instr_illegal = !csrWrite(csr_index, ctx[currentCtx].GPR[inst.i_type.rs1]);
                         if (!is_instr_illegal && inst.i_type.rd) setGPR(inst.i_type.rd, csr_result);
                         break;
                     }
@@ -682,7 +682,7 @@ void MiniCPU_ns::RV64Core::step() {
                         uint64_t csr_result;
                         if (!is_instr_illegal) is_instr_illegal = !csrRead(csr_index, csr_result);
                         if (!is_instr_illegal && inst.i_type.rs1) is_instr_illegal = !csrWrite(csr_index, csr_result |
-                                                                                                          GPR[inst.i_type.rs1]);
+                                                                                                          ctx[currentCtx].GPR[inst.i_type.rs1]);
                         if (!is_instr_illegal && inst.i_type.rd) setGPR(inst.i_type.rd, csr_result);
                         break;
                     }
@@ -693,7 +693,7 @@ void MiniCPU_ns::RV64Core::step() {
                         uint64_t csr_result;
                         if (!is_instr_illegal) is_instr_illegal = !csrRead(csr_index, csr_result);
                         if (!is_instr_illegal && inst.i_type.rs1) is_instr_illegal = !csrWrite(csr_index, csr_result &
-                                                                                                          (~GPR[inst.i_type.rs1]));
+                                                                                                          (~ctx[currentCtx].GPR[inst.i_type.rs1]));
                         if (!is_instr_illegal && inst.i_type.rd) setGPR(inst.i_type.rd, csr_result);
                         break;
                     }
@@ -746,7 +746,7 @@ void MiniCPU_ns::RV64Core::step() {
             case OPCODE_C_ADDI4SPN: {
                 uint8_t rd = 8 + binary_concat(inst.val,4,2,0);
                 int64_t imm = binary_concat(inst.val,12,11,4) | binary_concat(inst.val,10,7,6) | binary_concat(inst.val,6,6,2) | binary_concat(inst.val,5,5,3);
-                int64_t value = GPR[2] + imm;
+                int64_t value = ctx[currentCtx].GPR[2] + imm;
                 if (imm) setGPR(rd, value); // nzimm
                 else is_instr_illegal = true;
                 break;
@@ -754,7 +754,7 @@ void MiniCPU_ns::RV64Core::step() {
             case OPCODE_C_LW: {
                 uint64_t imm = (binary_concat(inst.val,6,6,2) | binary_concat(inst.val,5,5,6) | binary_concat(inst.val,12,10,3));
                 uint8_t rs1 = 8 + binary_concat(inst.val,9,7,0);
-                uint64_t mem_addr = GPR[rs1] + imm;
+                uint64_t mem_addr = ctx[currentCtx].GPR[rs1] + imm;
                 uint8_t rd = 8 + binary_concat(inst.val,4,2,0);
                 int32_t buf;
                 bool ok = memRead(mem_addr, 4, (unsigned char *) &buf);
@@ -764,7 +764,7 @@ void MiniCPU_ns::RV64Core::step() {
             case OPCODE_C_LD: {
                 uint64_t imm = (binary_concat(inst.val,6,5,6) | binary_concat(inst.val,12,10,3));
                 uint8_t rs1 = 8 + binary_concat(inst.val,9,7,0);
-                uint64_t mem_addr = GPR[rs1] + imm;
+                uint64_t mem_addr = ctx[currentCtx].GPR[rs1] + imm;
                 uint8_t rd = 8 + binary_concat(inst.val,4,2,0);
                 int64_t buf;
                 bool ok = memRead(mem_addr, 8, (unsigned char *) &buf);
@@ -774,31 +774,31 @@ void MiniCPU_ns::RV64Core::step() {
             case OPCODE_C_SW: {
                 uint64_t imm = (binary_concat(inst.val,6,6,2) | binary_concat(inst.val,5,5,6) | binary_concat(inst.val,12,10,3));
                 uint8_t rs1 = 8 + binary_concat(inst.val,9,7,0);
-                uint64_t mem_addr = GPR[rs1] + imm;
+                uint64_t mem_addr = ctx[currentCtx].GPR[rs1] + imm;
                 uint8_t rs2 = 8 + binary_concat(inst.val,4,2,0);
-                memWrite(mem_addr, 4, (unsigned char *) &GPR[rs2]);
+                memWrite(mem_addr, 4, (unsigned char *) &ctx[currentCtx].GPR[rs2]);
                 break;
             }
             case OPCODE_C_SD: {
                 uint64_t imm = binary_concat(inst.val,6,5,6) | binary_concat(inst.val,12,10,3);
                 uint8_t rs1 = 8 + binary_concat(inst.val,9,7,0);
-                uint64_t mem_addr = GPR[rs1] + imm;
+                uint64_t mem_addr = ctx[currentCtx].GPR[rs1] + imm;
                 uint8_t rs2 = 8 + binary_concat(inst.val,4,2,0);
-                memWrite(mem_addr, 8, (unsigned char *) &GPR[rs2]);
+                memWrite(mem_addr, 8, (unsigned char *) &ctx[currentCtx].GPR[rs2]);
                 break;
             }
             case OPCODE_C_ADDI: {
                 uint64_t imm = binary_concat(inst.val,12,12,5) | binary_concat(inst.val,6,2,0);
                 if (imm >> 5) imm |= 0xffffffffffffffc0u; // sign extend[5]
                 uint8_t rd = binary_concat(inst.val,11,7,0);
-                if (imm) setGPR(rd, alu_exec(GPR[rd], imm, ALU_ADD)); // nzimm
+                if (imm) setGPR(rd, alu_exec(ctx[currentCtx].GPR[rd], imm, ALU_ADD)); // nzimm
                 break;
             }
             case OPCODE_C_ADDIW: {
                 uint64_t imm = binary_concat(inst.val,12,12,5) | binary_concat(inst.val,6,2,0);
                 if (imm >> 5) imm |= 0xffffffffffffffc0u; // sign extend[5]
                 uint8_t rd = binary_concat(inst.val,11,7,0);
-                setGPR(rd, alu_exec(GPR[rd], imm, ALU_ADD, true));
+                setGPR(rd, alu_exec(ctx[currentCtx].GPR[rd], imm, ALU_ADD, true));
                 break;
             }
             case OPCODE_C_LI: {
@@ -813,7 +813,7 @@ void MiniCPU_ns::RV64Core::step() {
                 if (rd == 2)  { // ADDI16SPN
                     int64_t imm = binary_concat(inst.val,12,12,9) | binary_concat(inst.val,6,6,4) | binary_concat(inst.val,5,5,6) | binary_concat(inst.val,4,3,7) | binary_concat(inst.val,2,2,5);
                     if (imm >> 9) imm |= 0xfffffffffffffc00u; // sign extend[9]
-                    uint64_t value = GPR[rd] + imm;
+                    uint64_t value = ctx[currentCtx].GPR[rd] + imm;
                     if (imm) setGPR(rd, value); // nzimm
                 }
                 else { // LUI
@@ -831,10 +831,10 @@ void MiniCPU_ns::RV64Core::step() {
                     uint64_t imm = binary_concat(inst.val,12,12,5) | binary_concat(inst.val,6,2,0);
                     if (imm) { // nzimm
                         if (is_srai) {
-                            setGPR(rs1, alu_exec(GPR[rs1], imm, ALU_SRA));
+                            setGPR(rs1, alu_exec(ctx[currentCtx].GPR[rs1], imm, ALU_SRA));
                         }
                         else {
-                            setGPR(rs1, alu_exec(GPR[rs1], imm, ALU_SRL));
+                            setGPR(rs1, alu_exec(ctx[currentCtx].GPR[rs1], imm, ALU_SRL));
                         }
                     }
                 }
@@ -843,7 +843,7 @@ void MiniCPU_ns::RV64Core::step() {
                     if (is_andi) {
                         int64_t imm = binary_concat(inst.val,12,12,5) | binary_concat(inst.val,6,2,0);
                         if (imm >> 5) imm |= 0xffffffffffffffc0u; // sign extend[5]
-                        setGPR(rs1, alu_exec(GPR[rs1], imm, ALU_AND));
+                        setGPR(rs1, alu_exec(ctx[currentCtx].GPR[rs1], imm, ALU_AND));
                     }
                     else {
                         uint8_t rs2 = 8 + binary_concat(inst.val,4,2,0);
@@ -851,19 +851,19 @@ void MiniCPU_ns::RV64Core::step() {
                         bool instr_12 = binary_concat(inst.val,12,12,0);
                         switch (funct2) {
                             case FUNCT2_SUB:
-                                setGPR(rs1, alu_exec(GPR[rs1], GPR[rs2], ALU_SUB, instr_12));
+                                setGPR(rs1, alu_exec(ctx[currentCtx].GPR[rs1], ctx[currentCtx].GPR[rs2], ALU_SUB, instr_12));
                                 break;
                             case FUNCT2_XOR_ADDW:
-                                setGPR(rs1, alu_exec(GPR[rs1], GPR[rs2], instr_12 ? ALU_ADD : ALU_XOR, instr_12));
+                                setGPR(rs1, alu_exec(ctx[currentCtx].GPR[rs1], ctx[currentCtx].GPR[rs2], instr_12 ? ALU_ADD : ALU_XOR, instr_12));
                                 break;
                             case FUNCT2_OR: {
                                 if (instr_12) is_instr_illegal = true;
-                                else setGPR(rs1, alu_exec(GPR[rs1], GPR[rs2], ALU_OR));
+                                else setGPR(rs1, alu_exec(ctx[currentCtx].GPR[rs1], ctx[currentCtx].GPR[rs2], ALU_OR));
                                 break;
                             }
                             case FUNCT2_AND: {
                                 if (instr_12) is_instr_illegal = true;
-                                else setGPR(rs1, alu_exec(GPR[rs1], GPR[rs2], ALU_AND));
+                                else setGPR(rs1, alu_exec(ctx[currentCtx].GPR[rs1], ctx[currentCtx].GPR[rs2], ALU_AND));
                                 break;
                             }
                         }
@@ -886,7 +886,7 @@ void MiniCPU_ns::RV64Core::step() {
                 int64_t imm =   binary_concat(inst.val,12,12,8) | binary_concat(inst.val,11,10,3) | binary_concat(inst.val,6,5,6) | binary_concat(inst.val,4,3,1) | binary_concat(inst.val,2,2,5);
                 if (imm>>8) imm |= 0xfffffffffffffe00u; // sign extend [8]
                 uint8_t rs1 = 8 + binary_concat(inst.val,9,7,0);
-                if (GPR[rs1] == 0) {
+                if (ctx[currentCtx].GPR[rs1] == 0) {
                     currentProgramCounter = currentProgramCounter + imm;
                     is_new_pc_set = true;
                 }
@@ -896,7 +896,7 @@ void MiniCPU_ns::RV64Core::step() {
                 int64_t imm =   binary_concat(inst.val,12,12,8) | binary_concat(inst.val,11,10,3) | binary_concat(inst.val,6,5,6) | binary_concat(inst.val,4,3,1) | binary_concat(inst.val,2,2,5);
                 if (imm>>8) imm |= 0xfffffffffffffe00u; // sign extend [8]
                 uint8_t rs1 = 8 + binary_concat(inst.val,9,7,0);
-                if (GPR[rs1] != 0) {
+                if (ctx[currentCtx].GPR[rs1] != 0) {
                     currentProgramCounter = currentProgramCounter + imm;
                     is_new_pc_set = true;
                 }
@@ -905,12 +905,12 @@ void MiniCPU_ns::RV64Core::step() {
             case OPCODE_C_SLLI: {
                 int64_t imm =   binary_concat(inst.val,12,12,5) | binary_concat(inst.val,6,2,0);
                 uint8_t rs1 = binary_concat(inst.val,11,7,0);
-                if (imm) setGPR(rs1, alu_exec(GPR[rs1], imm, ALU_SLL)); // nzimm
+                if (imm) setGPR(rs1, alu_exec(ctx[currentCtx].GPR[rs1], imm, ALU_SLL)); // nzimm
                 break;
             }
             case OPCODE_C_LWSP: {
                 uint64_t imm = (binary_concat(inst.val,6,4,2) | binary_concat(inst.val,3,2,6) | binary_concat(inst.val,12,12,5));
-                uint64_t mem_addr = GPR[2] + imm;
+                uint64_t mem_addr = ctx[currentCtx].GPR[2] + imm;
                 uint8_t rd = binary_concat(inst.val,11,7,0);
                 int32_t buf;
                 bool ok = memRead(mem_addr, 4, (unsigned char *) &buf);
@@ -920,7 +920,7 @@ void MiniCPU_ns::RV64Core::step() {
             }
             case OPCODE_C_LDSP: {
                 uint64_t imm = (binary_concat(inst.val,6,5,3) | binary_concat(inst.val,4,2,6) | binary_concat(inst.val,12,12,5));
-                uint64_t mem_addr = GPR[2] + imm;
+                uint64_t mem_addr = ctx[currentCtx].GPR[2] + imm;
                 uint8_t rd = binary_concat(inst.val,11,7,0);
                 int64_t buf;
                 bool ok = memRead(mem_addr, 8, (unsigned char *) &buf);
@@ -938,7 +938,7 @@ void MiniCPU_ns::RV64Core::step() {
                             ebreak();
                         }
                         else { // JALR
-                            uint64_t npc = GPR[rs1];
+                            uint64_t npc = ctx[currentCtx].GPR[rs1];
                             if (npc & 1) npc ^= 1;
                             CSReg_Cause_t cause;
                             cause.interrupt = 0;
@@ -952,14 +952,14 @@ void MiniCPU_ns::RV64Core::step() {
                         }
                     }
                     else { // ADD
-                        setGPR(rs1, alu_exec(GPR[rs1], GPR[rs2], ALU_ADD));
+                        setGPR(rs1, alu_exec(ctx[currentCtx].GPR[rs1], ctx[currentCtx].GPR[rs2], ALU_ADD));
                     }
                 }
                 else {
                     if (rs2 == 0) { // JR
                         if (rs1 == 0) is_instr_illegal = true;
                         else {
-                            uint64_t npc = GPR[rs1];
+                            uint64_t npc = ctx[currentCtx].GPR[rs1];
                             if (npc & 1) npc ^= 1;
                             CSReg_Cause_t cause;
                             cause.interrupt = 0;
@@ -972,7 +972,7 @@ void MiniCPU_ns::RV64Core::step() {
                         }
                     }
                     else { // MV
-                        setGPR(rs1, GPR[rs2]);
+                        setGPR(rs1, ctx[currentCtx].GPR[rs2]);
                         // TODO: rs1(rd) != 0
                     }
                 }
@@ -980,16 +980,16 @@ void MiniCPU_ns::RV64Core::step() {
             }
             case OPCODE_C_SWSP: {
                 uint64_t imm = (binary_concat(inst.val,12,9,2) | binary_concat(inst.val,8,7,6));
-                uint64_t mem_addr = GPR[2] + imm;
+                uint64_t mem_addr = ctx[currentCtx].GPR[2] + imm;
                 uint8_t rs2 = binary_concat(inst.val,6,2,0);
-                memWrite(mem_addr, 4, (unsigned char *) &GPR[rs2]);
+                memWrite(mem_addr, 4, (unsigned char *) &ctx[currentCtx].GPR[rs2]);
                 break;
             }
             case OPCODE_C_SDSP: {
                 uint64_t imm = (binary_concat(inst.val,12,10,3) | binary_concat(inst.val,9,7,6));
-                uint64_t mem_addr = GPR[2] + imm;
+                uint64_t mem_addr = ctx[currentCtx].GPR[2] + imm;
                 uint8_t rs2 = binary_concat(inst.val,6,2,0);
-                memWrite(mem_addr, 8, (unsigned char *) &GPR[rs2]);
+                memWrite(mem_addr, 8, (unsigned char *) &ctx[currentCtx].GPR[rs2]);
                 break;
             }
             default: {
