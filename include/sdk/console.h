@@ -33,6 +33,15 @@ const static char* STYLE_DEBUG = "";
 // ----- Control
 const static char* CTRL_CLEAR  = "\033[2J";
 
+static int putc_color(int ch) {
+    // char c = ch & 0xff;
+    int ret;
+    printf("%s", STYLE_BKG_GREEN);
+    ret = putc(ch, stdout);
+    printf("%s", STYLE_RST);
+    return ret;
+}
+
 #define LOG_ERRNO(err_desc) do {                        \
     STDOUT_ACQUIRE_LOCK;                                \
     printf("%s", STYLE_ERR);                            \

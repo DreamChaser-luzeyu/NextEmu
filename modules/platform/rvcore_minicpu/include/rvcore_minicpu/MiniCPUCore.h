@@ -42,6 +42,7 @@ private:
     // ----- Constants
     const static size_t   NR_CTX = 4;
     const uint64_t CTX_ID_REG_MMIO = 0x66ccf8ul;
+    const uint64_t PUTC_MMIO       = 0x66cd00ul;
     const uint64_t S_MODE_INT_MASK = (1ull << int_s_ext) | (1ull << int_s_sw) | (1ull << int_s_timer);
     const uint64_t COUNTER_MASK = (1 << 0) | (1 << 2);
     const uint64_t S_MODE_EXC_MASK = (1 << 16) - 1 - (1 << exec_ecall_from_machine);
@@ -109,6 +110,8 @@ private:
     bool needTrap;
     PrivMode_e currentPrivMode;
     PrivMode_e nextPrivMode;
+
+    int ch;
 
 public:
     void step() override;

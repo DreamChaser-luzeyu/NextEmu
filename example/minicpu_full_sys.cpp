@@ -124,7 +124,7 @@ void simple_full_sys_minicpu() {
     auto * miniCPUCtrl = new Builtin_ns::MiniCPUMemController(bus);
     bus->addDev(miniCPUCtrl, 0x200000000);
 
-    GDBStub gdbStub("127.0.0.1", 55556);
+    GDBStub gdbStub("127.0.0.1", 55555);
     gdbStub.Debug_GDBStub((Interface_ns::Debuggable_I*)(miniCPUCore));
 
     while(true) {

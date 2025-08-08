@@ -21,6 +21,13 @@ bool MiniCPU_ns::RV64Core::memRead(uint64_t start_addr, uint64_t size, uint8_t *
         LOG_DEBUG("Read curr_ctx reg val %08lx via MMIO", this->currentCtx);
         return true;
     }
+
+    if (start_addr == PUTC_MMIO) {
+        assert(size == 4);
+        memcpy(buffer, &ch, 4);
+        return true;
+    }
+
     int va_err = doLoad(start_addr, size, buffer);
     if (va_err == Interface_ns::FB_SUCCESS) {
         return true;
@@ -45,6 +52,13 @@ bool MiniCPU_ns::RV64Core::memWrite(uint64_t start_addr, uint64_t size, const ui
         memcpy(&(this->newCtx), (uint8_t*)buffer, 8);
         this->switchCtx = true;
         LOG_DEBUG("Write newCtx reg val %08lx via MMIO", this->newCtx);
+        return true;
+    }
+    if (start_addr == PUTC_MMIO) {
+        assert(size == 4);
+        // int ch;
+        memcpy(&ch, buffer, 4);
+        putc_color(ch);
         return true;
     }
 
