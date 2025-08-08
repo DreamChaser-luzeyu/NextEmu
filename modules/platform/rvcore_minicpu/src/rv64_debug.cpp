@@ -28,6 +28,14 @@ FuncReturnFeedback_e MiniCPU_ns::RV64Core::MemRead_DebugAPI(uint64_t start_addr,
 //    if(currentPrivMode == M_MODE || satp.mode == 0) {
 //        LOG_DEBUG("MMU not enabled, currently reading PADDR");
 
+
+    if (start_addr == CTX_ID_REG_MMIO) {
+        assert(size == 8);
+        memcpy((uint8_t*)buffer, &(this->currentCtx), 8);
+        LOG_DEBUG("Read curr_ctx reg val %08lx via MMIO from GDB", this->currentCtx);
+        return MEMU_OK;
+    }
+
         if(doLoad(start_addr, size, buffer) == Interface_ns::FB_SUCCESS) return MEMU_OK;
         return MEMU_UNKNOWN;
 //    }
@@ -72,7 +80,7 @@ FuncReturnFeedback_e MiniCPU_ns::RV64Core::DumpAllRegister_DebugAPI(std::vector<
     RegisterItem_t reg_item = {
             .reg_id = (uint16_t)32,
             .size = 8,
-            .val = { .u64_val = currentProgramCounter }
+            .val = { .u64_val = ctx[currentCtx].currentProgramCounter }
     };
     strcpy(reg_item.disp_name, PC_NAME.c_str());
     regs.push_back(reg_item);
@@ -86,6 +94,6 @@ FuncReturnFeedback_e MiniCPU_ns::RV64Core::WriteAllRegister_DebugAPI(const std::
         ctx[currentCtx].GPR[i] = regs.at(i).val.u64_val;
     }
     // --- Write PC
-    currentProgramCounter = regs.at(32).val.u64_val;
+    ctx[currentCtx].currentProgramCounter = regs.at(32).val.u64_val;
     return MEMU_OK;
 }

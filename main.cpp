@@ -40,6 +40,7 @@ int main() {
     // RUN_TEST_UNIT(UartEncoder_TestUnit);
     // RUN_TEST_UNIT(RVCoreSpike_TestUnit);
     // RUN_TEST_UNIT(RVCore_TestUnit);
+    RUN_TEST_UNIT(MemCtrl_TestUnit);
 
     // ----- Run example
     // simple_full_sys();

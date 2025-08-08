@@ -15,6 +15,12 @@ bool MiniCPU_ns::RV64Core::memRead(uint64_t start_addr, uint64_t size, uint8_t *
         raiseTrap(/*cause*/ { .cause = exec_load_misalign, .interrupt = 0 } , start_addr);
         return false;
     }
+    if (start_addr == CTX_ID_REG_MMIO) {
+        assert(size == 8);
+        memcpy((uint8_t*)buffer, &(this->currentCtx), 8);
+        LOG_DEBUG("Read curr_ctx reg val %08lx via MMIO", this->currentCtx);
+        return true;
+    }
     int va_err = doLoad(start_addr, size, buffer);
     if (va_err == Interface_ns::FB_SUCCESS) {
         return true;
@@ -34,6 +40,14 @@ bool MiniCPU_ns::RV64Core::memWrite(uint64_t start_addr, uint64_t size, const ui
         raiseTrap({ .cause = exec_store_misalign, .interrupt = 0 },start_addr);
         return false;
     }
+    if (start_addr == CTX_ID_REG_MMIO) {
+        assert(size == 8);
+        memcpy(&(this->newCtx), (uint8_t*)buffer, 8);
+        this->switchCtx = true;
+        LOG_DEBUG("Write newCtx reg val %08lx via MMIO", this->newCtx);
+        return true;
+    }
+
     int va_err = doStore(start_addr,size,buffer);
     if (va_err == Interface_ns::FB_SUCCESS) {
         return true;
@@ -50,7 +64,16 @@ bool MiniCPU_ns::RV64Core::memWrite(uint64_t start_addr, uint64_t size, const ui
 
 FuncReturnFeedback_e MiniCPU_ns::RV64Core::WriteProgramCounter_DebugAPI(RegItemVal_t reg_val)
 {
-    currentProgramCounter = reg_val.u64_val;
+    ctx[currentCtx].currentProgramCounter = reg_val.u64_val;
+    return MEMU_OK;
+}
+
+FuncReturnFeedback_e MiniCPU_ns::RV64Core::WriteProgramCounterForAllCtx(RegItemVal_t reg_val)
+{
+    // ctx[currentCtx].currentProgramCounter = reg_val.u64_val;
+    for (size_t i = 0; i < NR_CTX; i++) {
+        ctx[i].currentProgramCounter = reg_val.u64_val;
+    }
     return MEMU_OK;
 }
 
@@ -66,7 +89,7 @@ FuncReturnFeedback_e MiniCPU_ns::RV64Core::setGPRByIndex(uint8_t gpr_index, int6
 
 FuncReturnFeedback_e MiniCPU_ns::RV64Core::DumpProgramCounter_DebugAPI(RegisterItem_t &reg)
 {
-    reg.val.u64_val = currentProgramCounter;
+    reg.val.u64_val = ctx[currentCtx].currentProgramCounter;
     reg.reg_id = 33;
     reg.size = 8;
     strcpy(reg.disp_name, "pc");

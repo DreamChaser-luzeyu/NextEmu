@@ -41,6 +41,7 @@ public:
 private:
     // ----- Constants
     const static size_t   NR_CTX = 4;
+    const uint64_t CTX_ID_REG_MMIO = 0x66ccf8ul;
     const uint64_t S_MODE_INT_MASK = (1ull << int_s_ext) | (1ull << int_s_sw) | (1ull << int_s_timer);
     const uint64_t COUNTER_MASK = (1 << 0) | (1 << 2);
     const uint64_t S_MODE_EXC_MASK = (1 << 16) - 1 - (1 << exec_ecall_from_machine);
@@ -60,10 +61,14 @@ private:
     typedef struct MiniCPUCtx {
         // ----- Registers
         int64_t GPR[32];                    // General purpose registers
+        uint64_t waitingChnBits = 0ul;
+        uint64_t currentProgramCounter;
     } MiniCPUCtx_t;
 
     MiniCPUCtx_t ctx[NR_CTX];
-    size_t currentCtx = 0;
+    uint64_t currentCtx = 0;
+    uint64_t newCtx = 0;
+    bool switchCtx = false;
 
     // ----- CSRs
     // --- M_MODE CSRs
@@ -98,7 +103,7 @@ private:
     CSReg_IntPending_t csrIntPending;       // mip, sip
     uint64_t csrIntEnable;                  // mie, sie TODO: mask?
     uint64_t trapProgramCounter;
-    uint64_t currentProgramCounter;
+
 
     // ----- Inner states
     bool needTrap;
@@ -115,6 +120,8 @@ public:
     FuncReturnFeedback_e DumpProgramCounter_DebugAPI(RegisterItem_t &reg) override;
 
     FuncReturnFeedback_e WriteProgramCounter_DebugAPI(RegItemVal_t reg_val) override;
+
+    FuncReturnFeedback_e WriteProgramCounterForAllCtx(RegItemVal_t reg_val);
 
     FuncReturnFeedback_e setGPRByIndex(uint8_t gpr_index, int64_t val);
 

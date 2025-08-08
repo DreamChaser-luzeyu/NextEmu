@@ -373,6 +373,7 @@ bool MiniCPU_ns::RV64Core::csr_op_permission_check(uint16_t csr_index, bool writ
 
 void MiniCPU_ns::RV64Core::raiseTrap(CSReg_Cause_t cause, uint64_t tval)
 {
+    assert(false);
     assert(!this->needTrap);
     assert(cause.cause != exec_ok);
     needTrap = true;
@@ -401,7 +402,7 @@ void MiniCPU_ns::RV64Core::raiseTrap(CSReg_Cause_t cause, uint64_t tval)
         // Trap to S_MODE
         csrSupervisorTrapVal = tval;
         csrSupervisorCause.val = cause.val;
-        csrSExceptionPC = currentProgramCounter;
+        csrSExceptionPC = ctx[currentCtx].currentProgramCounter;
         CSReg_SStatus_t* csrSupervisorStatus = (CSReg_SStatus_t *)(&status);
         csrSupervisorStatus->spie = csrSupervisorStatus->sie;  // TODO: ???
         csrSupervisorStatus->sie = 0;
@@ -414,7 +415,7 @@ void MiniCPU_ns::RV64Core::raiseTrap(CSReg_Cause_t cause, uint64_t tval)
         // Trap to M_MODE
         csrMachineTrapVal = tval;
         csrMachineCause.val = cause.val;
-        csrMExceptionPC = currentProgramCounter;
+        csrMExceptionPC = ctx[currentCtx].currentProgramCounter;
         CSReg_MStatus_t* csrMachineStatus = (CSReg_MStatus_t *)(&status);
         csrMachineStatus->mpie = csrMachineStatus->mie;
         csrMachineStatus->mie = 0;

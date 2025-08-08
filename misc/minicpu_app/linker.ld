@@ -42,7 +42,7 @@ SECTIONS {
         . = ALIGN(8);
         __stack_start = .;
         . += 0x10000;    /* 64KB 栈空间 */
-        __stack_end = .;
+        __stack_end = .; /* stack top */
     } > MINICPU_MEM
 
     /* 其他设置 */

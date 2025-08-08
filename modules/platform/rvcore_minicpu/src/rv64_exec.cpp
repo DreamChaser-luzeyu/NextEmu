@@ -3,7 +3,7 @@
 #include "rvcore_minicpu/MiniCPUCore.h"
 
 void MiniCPU_ns::RV64Core::step() {
-//    LOG_DEBUG("CURRENT PC: %016lx", currentProgramCounter);
+//    LOG_DEBUG("CURRENT PC: %016lx", ctx[currentCtx].currentProgramCounter);
     bool is_new_pc_set = false;
     bool is_compressed_inst = false;
     bool is_instr_illegal = false;
@@ -13,18 +13,18 @@ void MiniCPU_ns::RV64Core::step() {
     VAddr_RW_Feedback feedback;
     preExec();
     if(needTrap) goto exception;
-    if(currentProgramCounter % PC_ALIGN) {
-        raiseTrap({ .cause = exec_instr_misalign, .interrupt = 0 }, currentProgramCounter);
+    if(ctx[currentCtx].currentProgramCounter % PC_ALIGN) {
+        raiseTrap({ .cause = exec_instr_misalign, .interrupt = 0 }, ctx[currentCtx].currentProgramCounter);
         goto exception;
     }
-    feedback = ((RV64SV39_MMU*)subBus)->VAddr_InstFetch_MMU_API(currentProgramCounter, 4, &inst);
+    feedback = ((RV64SV39_MMU*)subBus)->VAddr_InstFetch_MMU_API(ctx[currentCtx].currentProgramCounter, 4, &inst);
     if(feedback != INST_ACCESS_OK) {
         CSReg_Cause_t cause;
         cause.cause = (feedback == INST_PAGE_FAULT) ? exec_instr_pgfault :
                       (feedback == INST_ACCESS_FAULT) ? exec_instr_acc_fault : 0;
         assert(cause.cause);
         cause.interrupt = 0;
-        raiseTrap(cause, currentProgramCounter);
+        raiseTrap(cause, ctx[currentCtx].currentProgramCounter);
         goto exception;
     }
     // --- Decode & exec
@@ -126,18 +126,18 @@ void MiniCPU_ns::RV64Core::step() {
             }
             case OPCODE_AUIPC: {
                 // Add Upper Immediate to PC, x[rd] = pc+sext(immediate[31:12] << 12)
-                setGPR(inst.u_type.rd, (((int64_t) inst.u_type.imm_31_12) << 12) + currentProgramCounter);
+                setGPR(inst.u_type.rd, (((int64_t) inst.u_type.imm_31_12) << 12) + ctx[currentCtx].currentProgramCounter);
                 break;
             }
             case OPCODE_JAL: {
                 // Jump And Link, x[rd] = pc+4; pc += sext(offset)
-                uint64_t npc = currentProgramCounter + ((inst.j_type.imm_20 << 20) | (inst.j_type.imm_19_12 << 12) | (inst.j_type.imm_11 << 11) | (inst.j_type.imm_10_1 << 1));
+                uint64_t npc = ctx[currentCtx].currentProgramCounter + ((inst.j_type.imm_20 << 20) | (inst.j_type.imm_19_12 << 12) | (inst.j_type.imm_11 << 11) | (inst.j_type.imm_10_1 << 1));
                 if (npc % PC_ALIGN) {
                     raiseTrap({ .cause = exec_instr_misalign, .interrupt = 0 }, npc);
                 }
                 else {
-                    setGPR(inst.j_type.rd, currentProgramCounter + 4);
-                    currentProgramCounter = npc;
+                    setGPR(inst.j_type.rd, ctx[currentCtx].currentProgramCounter + 4);
+                    ctx[currentCtx].currentProgramCounter = npc;
                     is_new_pc_set = true;
                 }
                 break;
@@ -152,8 +152,8 @@ void MiniCPU_ns::RV64Core::step() {
                     raiseTrap({ .cause = exec_instr_misalign, .interrupt = 0 }, npc);
                 }
                 else {
-                    setGPR(inst.j_type.rd, currentProgramCounter + 4);
-                    currentProgramCounter = npc;
+                    setGPR(inst.j_type.rd, ctx[currentCtx].currentProgramCounter + 4);
+                    ctx[currentCtx].currentProgramCounter = npc;
                     is_new_pc_set = true;
                 }
                 break;
@@ -165,7 +165,7 @@ void MiniCPU_ns::RV64Core::step() {
                     case FUNCT3_BEQ:
                         // Branch if Equal, if (rs1 == rs2) pc += sext(offset)
                         if (ctx[currentCtx].GPR[inst.b_type.rs1] == ctx[currentCtx].GPR[inst.b_type.rs2]) {
-                            npc = currentProgramCounter + offset;
+                            npc = ctx[currentCtx].currentProgramCounter + offset;
                             is_new_pc_set = true;
                         }
                         break;
@@ -174,35 +174,35 @@ void MiniCPU_ns::RV64Core::step() {
                     case FUNCT3_BNE:
                         // Branch if Not Equal, if (rs1 ≠ rs2) pc += sext(offset)
                         if (ctx[currentCtx].GPR[inst.b_type.rs1] != ctx[currentCtx].GPR[inst.b_type.rs2]) {
-                            npc = currentProgramCounter + offset;
+                            npc = ctx[currentCtx].currentProgramCounter + offset;
                             is_new_pc_set = true;
                         }
                         break;
                     case FUNCT3_BLT:
                         // Branch if Less Than, if (rs1 <s rs2) pc += sext(offset)
                         if (ctx[currentCtx].GPR[inst.b_type.rs1] < ctx[currentCtx].GPR[inst.b_type.rs2]) {
-                            npc = currentProgramCounter + offset;
+                            npc = ctx[currentCtx].currentProgramCounter + offset;
                             is_new_pc_set = true;
                         }
                         break;
                     case FUNCT3_BGE:
                         // Branch if Greater than or Equal, if (rs1 ≥s rs2) pc += sext(offset)
                         if (ctx[currentCtx].GPR[inst.b_type.rs1] >= ctx[currentCtx].GPR[inst.b_type.rs2]) {
-                            npc = currentProgramCounter + offset;
+                            npc = ctx[currentCtx].currentProgramCounter + offset;
                             is_new_pc_set = true;
                         }
                         break;
                     case FUNCT3_BLTU:
                         // Branch if Less Than Unsigned, if (rs1 <u rs2) pc += sext(offset)
                         if ((uint64_t)ctx[currentCtx].GPR[inst.b_type.rs1] < (uint64_t)ctx[currentCtx].GPR[inst.b_type.rs2]) {
-                            npc = currentProgramCounter + offset;
+                            npc = ctx[currentCtx].currentProgramCounter + offset;
                             is_new_pc_set = true;
                         }
                         break;
                     case FUNCT3_BGEU:
                         // Branch if Greater Than or Equal Unsigned, if (rs1 ≥u rs2) pc += sext(offset)
                         if ((uint64_t)ctx[currentCtx].GPR[inst.b_type.rs1] >= (uint64_t)ctx[currentCtx].GPR[inst.b_type.rs2]) {
-                            npc = currentProgramCounter + offset;
+                            npc = ctx[currentCtx].currentProgramCounter + offset;
                             is_new_pc_set = true;
                         }
                         break;
@@ -212,7 +212,7 @@ void MiniCPU_ns::RV64Core::step() {
                 }
                 if (is_new_pc_set) {
                     if (npc % PC_ALIGN) raiseTrap({ .cause = exec_instr_misalign, .interrupt = 0 }, npc);
-                    else currentProgramCounter = npc;
+                    else ctx[currentCtx].currentProgramCounter = npc;
                 }
                 break;
             }
@@ -877,8 +877,8 @@ void MiniCPU_ns::RV64Core::step() {
                               binary_concat(inst.val,7,7,6) | binary_concat(inst.val,6,6,7) |
                               binary_concat(inst.val,5,3,1) | binary_concat(inst.val,2,2,5);
                 if (imm >> 11) imm |= 0xfffffffffffff000u; // sign extend [11]
-                uint64_t npc = currentProgramCounter + imm;
-                currentProgramCounter = npc;
+                uint64_t npc = ctx[currentCtx].currentProgramCounter + imm;
+                ctx[currentCtx].currentProgramCounter = npc;
                 is_new_pc_set = true;
                 break;
             }
@@ -887,7 +887,7 @@ void MiniCPU_ns::RV64Core::step() {
                 if (imm>>8) imm |= 0xfffffffffffffe00u; // sign extend [8]
                 uint8_t rs1 = 8 + binary_concat(inst.val,9,7,0);
                 if (ctx[currentCtx].GPR[rs1] == 0) {
-                    currentProgramCounter = currentProgramCounter + imm;
+                    ctx[currentCtx].currentProgramCounter = ctx[currentCtx].currentProgramCounter + imm;
                     is_new_pc_set = true;
                 }
                 break;
@@ -897,7 +897,7 @@ void MiniCPU_ns::RV64Core::step() {
                 if (imm>>8) imm |= 0xfffffffffffffe00u; // sign extend [8]
                 uint8_t rs1 = 8 + binary_concat(inst.val,9,7,0);
                 if (ctx[currentCtx].GPR[rs1] != 0) {
-                    currentProgramCounter = currentProgramCounter + imm;
+                    ctx[currentCtx].currentProgramCounter = ctx[currentCtx].currentProgramCounter + imm;
                     is_new_pc_set = true;
                 }
                 break;
@@ -945,8 +945,8 @@ void MiniCPU_ns::RV64Core::step() {
                             cause.cause = exec_instr_misalign;
                             if (npc % PC_ALIGN) raiseTrap(cause,npc);
                             else {
-                                setGPR(1, currentProgramCounter + 2);
-                                currentProgramCounter = npc;
+                                setGPR(1, ctx[currentCtx].currentProgramCounter + 2);
+                                ctx[currentCtx].currentProgramCounter = npc;
                                 is_new_pc_set = true;
                             }
                         }
@@ -966,7 +966,7 @@ void MiniCPU_ns::RV64Core::step() {
                             cause.cause = exec_instr_misalign;
                             if (npc % PC_ALIGN) raiseTrap(cause,npc);
                             else {
-                                currentProgramCounter = npc;
+                                ctx[currentCtx].currentProgramCounter = npc;
                                 is_new_pc_set = true;
                             }
                         }
@@ -1004,13 +1004,16 @@ exception:
         raiseTrap({ .cause = exec_illegal_instr, .interrupt = 0 }, inst.val);
     }
     if(needTrap) {
-        currentProgramCounter = trapProgramCounter;
+        ctx[currentCtx].currentProgramCounter = trapProgramCounter;
     }
     else if(!is_new_pc_set){
-        currentProgramCounter = currentProgramCounter + (is_compressed_inst ? 2 : 4);
+        ctx[currentCtx].currentProgramCounter = ctx[currentCtx].currentProgramCounter + (is_compressed_inst ? 2 : 4);
     }
 post_exec:
-    if(!needTrap) { minstret++; }
+    if(!needTrap) {
+
+        minstret++;
+    }
     needTrap = false;
     CSReg_MStatus_t* mstatus = (CSReg_MStatus_t*)&status;
     // seems useless, to be removed
@@ -1019,6 +1022,13 @@ post_exec:
     assert(mstatus->blank2 == 0);
     assert(mstatus->blank3 == 0);
     assert(mstatus->blank4 == 0);
+
+    if (switchCtx) {
+        switchCtx = false;
+        LOG_INFO("MiniCPU: Switching ctx from %lu to %lu", currentCtx, newCtx);
+        currentCtx = newCtx;
+    }
+
     return;
 }
 
