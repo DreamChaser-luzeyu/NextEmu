@@ -39,6 +39,7 @@ static int putc_color(int ch) {
     printf("%s", STYLE_BKG_GREEN);
     ret = putc(ch, stdout);
     printf("%s", STYLE_RST);
+    fflush(stdout);
     return ret;
 }
 
@@ -49,6 +50,7 @@ static int putc_color(int ch) {
     printf("%s : ", err_desc);                          \
     printf("%s(errno: %d)", strerror(errno), errno);    \
     printf("%s\n", STYLE_RST);                          \
+    fflush(stdout);                                     \
     STDOUT_RELEASE_LOCK;                                \
 } while(0)
 
@@ -63,6 +65,7 @@ static int putc_color(int ch) {
     printf("[ERROR] ");               \
     printf(__VA_ARGS__);              \
     printf("%s\n", STYLE_RST);        \
+fflush(stdout);                                     \
     STDOUT_RELEASE_LOCK;              \
 } while(0)
 
@@ -72,6 +75,7 @@ static int putc_color(int ch) {
     printf("[WARN ] ");               \
     printf(__VA_ARGS__);              \
     printf("%s\n", STYLE_RST);        \
+fflush(stdout);                                     \
     STDOUT_RELEASE_LOCK;              \
 } while(0)
 
@@ -81,6 +85,7 @@ static int putc_color(int ch) {
     printf("[INFO ] ");               \
     printf(__VA_ARGS__);              \
     printf("%s\n", STYLE_RST);        \
+fflush(stdout);                                     \
     STDOUT_RELEASE_LOCK;              \
 } while(0)
 
@@ -103,6 +108,7 @@ static int putc_color(int ch) {
 #define LOG_CLEAR() do {              \
     STDOUT_ACQUIRE_LOCK;              \
     printf("%s", CTRL_CLEAR);         \
+fflush(stdout);                                     \
     STDOUT_RELEASE_LOCK;              \
 } while(0)
 #endif

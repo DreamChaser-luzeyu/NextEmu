@@ -2,6 +2,7 @@
 #include <stdint.h>
 
 #define NR_CTX               (4ul)
+#define SCHEDULER_CTX_ID     (0ul)
 #define NR_CHN               (16ul)
 #define CURR_CTX_REG_ADDR    (0x66ccf8ul)
 #define MEM_CTRL_REG_BASE    (0x200000000ul)
@@ -36,6 +37,21 @@ int putchar(int ch) {
     return *ptr;
 }
 
+void print_str(const char *str) {
+    const char *ptr = str;
+    while (*ptr != '\0') {
+        putchar(*ptr);
+        ptr++;
+    }
+}
+
+void simple_assert(bool cond) {
+    if (!cond) {
+        print_str("ASSERT FALSE! \n\n");
+        while (true);
+    }
+}
+
 uint64_t get_curr_ctx_id() {
      uint64_t *ptr = (uint64_t*)CURR_CTX_REG_ADDR;
      return *ptr;
@@ -48,14 +64,20 @@ void switch2ctx(uint64_t ctx_id) {
 
 void yield() {
     // if (get_curr_ctx_id() != 0) {
-        switch2ctx(0);
+        switch2ctx(SCHEDULER_CTX_ID);
     // }
 }
 
-void append_curr_ctx_waiting_chn(int64_t chn_id) {
-    int64_t curr_ctx = get_curr_ctx_id();
+void append_curr_ctx_rd_waiting_chn(int64_t chn_id) {
+    uint64_t curr_ctx = get_curr_ctx_id();
     curr_ctx %= NR_CTX;
     ctx_rd_waiting[curr_ctx] |= (1ul << (uint64_t)chn_id);
+}
+
+void append_curr_ctx_wr_waiting_chn(int64_t chn_id) {
+    uint64_t curr_ctx = get_curr_ctx_id();
+    curr_ctx %= NR_CTX;
+    ctx_wr_waiting[curr_ctx] |= (1ul << (uint64_t)chn_id);
 }
 
 /**
@@ -76,7 +98,7 @@ int async_rd_dword(uint64_t src_addr, uint64_t dst_addr) {
         return -1;  // No free channel now...
     }
     // 2-- Set current ctx waiting bit
-    append_curr_ctx_waiting_chn(free_chn);
+    append_curr_ctx_rd_waiting_chn(free_chn);
     // 3-- Set src and dst addr
     REG_PTR->rd_chn_descs[free_chn].src_addr = src_addr;
     REG_PTR->rd_chn_descs[free_chn].dst_addr = dst_addr;
@@ -90,15 +112,33 @@ int async_rd_dword(uint64_t src_addr, uint64_t dst_addr) {
  * @param src_addr
  * @param dst_addr
  */
-void async_wr_dword(uint64_t src_addr, uint64_t dst_addr) {
-
+int async_wr_dword(uint64_t src_addr, uint64_t dst_addr) {
+    // 1-- Find free channel
+    int free_chn = 0;
+    for (free_chn = 0; free_chn < NR_CHN; free_chn++) {
+        uint64_t mask = 1ul << free_chn;
+        if ((mask & (REG_PTR->wr_pending_chn_bits)) == 0ul) {
+            break;
+        }
+    }
+    if (free_chn >= NR_CHN) {
+        return -1;  // No free channel now...
+    }
+    // 2-- Set current ctx waiting bit
+    append_curr_ctx_rd_waiting_chn(free_chn);
+    // 3-- Set src and dst addr
+    REG_PTR->rd_chn_descs[free_chn].src_addr = src_addr;
+    REG_PTR->rd_chn_descs[free_chn].dst_addr = dst_addr;
+    // 4-- Set chn bit
+    (REG_PTR->rd_pending_chn_bits) |= (1ul << free_chn);
+    return free_chn;
 }
 
 int app_main();
 
 void init() {
     // ----- Only scheduler ctx do the initialization
-    if (get_curr_ctx_id() == 0ul) {
+    if (get_curr_ctx_id() == SCHEDULER_CTX_ID) {
         // --- Clear .bss section
         extern uint32_t _sbss;
         extern uint32_t _ebss;
@@ -125,26 +165,17 @@ void init() {
 }
 
 int app_main() {
-    putchar('h');
-    putchar('e');
-    putchar('l');
-    putchar('l');
-    putchar('o');
-    putchar('\n');
+    print_str("app_main: Hello, world! \n");
 
     uint64_t val;
     int chn;
     do { chn = async_rd_dword(0x80000000, (uint64_t)&val); } while (chn < 0);
+    simple_assert(((1ul << chn) & (REG_PTR->rd_pending_chn_bits)));
     yield();
 
-    putchar('s');
-    putchar('u');
-    putchar('c');
-    putchar('c');
-    putchar('e');
-    putchar('s');
-    putchar('s');
-    putchar('\n');
+    print_str("app_main: async read success! \n");
+
+    yield();
 
     return 0;
 }

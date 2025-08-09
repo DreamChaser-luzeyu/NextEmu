@@ -148,27 +148,43 @@ void Builtin_ns::MiniCPUMemController::emitEvent(std::shared_ptr<Builtin_ns::Min
     queueCond.notify_one();
 }
 
+#define NR_CYCLE (88)
+
+extern volatile std::atomic<uint64_t> global_tick;
+
 Builtin_ns::MiniCPUMemController::MiniCPUMemController(Interface_ns::SlaveIO_I *bus, const char* desc)
         : bus(bus), devDesc(desc ? desc : "default"), stop(false) {
     // ----- Register Event Handler
     handler[EventType::ASYNC_READ] = [this](std::shared_ptr<MemCtrlEvent> event) {
         // assert(0x200000000ul <= event->dstAddr && event->dstAddr <= 0x200000000ul + 128ul * 1024ul * 1024ul - 8);
-        LOG_DEBUG("Handling read event...");
+        LOG_INFO("Handling read event...");
         uint64_t data = 0;
         this->bus->load(event->srcAddr, 8, (uint8_t*)&data);
         this->bus->store(event->dstAddr, 8, (uint8_t*)&data);
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+        uint64_t tick_start = global_tick;
+        // std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        while (global_tick - tick_start < NR_CYCLE);
         {
             std::lock_guard<std::mutex> lock(this->regMutex);
             uint64_t mask = ~(1ul << event->chnID);
             (this->reg.rd_pending_chn_bits) &= mask;           // clear pending bit
         }
-        LOG_DEBUG("Handle done");
+        LOG_INFO("Handle done");
     };
-    handler[EventType::ASYNC_WRITE] = [](std::shared_ptr<MemCtrlEvent>) {
-        LOG_DEBUG("Handling write event...");
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-        LOG_DEBUG("Handle done");
+    handler[EventType::ASYNC_WRITE] = [this](std::shared_ptr<MemCtrlEvent> event) {
+        LOG_INFO("Handling write event...");
+        uint64_t data = 0;
+        this->bus->load(event->srcAddr, 8, (uint8_t*)&data);
+        this->bus->store(event->dstAddr, 8, (uint8_t*)&data);
+        uint64_t tick_start = global_tick;
+        while (global_tick - tick_start < NR_CYCLE);
+        {
+            std::lock_guard<std::mutex> lock(this->regMutex);
+            uint64_t mask = ~(1ul << event->chnID);
+            (this->reg.rd_pending_chn_bits) &= mask;           // clear pending bit
+        }
+        LOG_INFO("Handle done");
     };
 
 

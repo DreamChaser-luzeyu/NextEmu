@@ -1,6 +1,10 @@
+#include <atomic>
+
 #include "rvcore_minicpu/misc/rv64_inst.h"
 #include "sdk/console.h"
 #include "rvcore_minicpu/MiniCPUCore.h"
+
+volatile std::atomic<uint64_t> global_tick;  // TODO: refactor this!
 
 void MiniCPU_ns::RV64Core::step() {
 //    LOG_DEBUG("CURRENT PC: %016lx", ctx[currentCtx].currentProgramCounter);
@@ -1028,6 +1032,8 @@ post_exec:
         LOG_INFO("MiniCPU: Switching ctx from %lu to %lu", currentCtx, newCtx);
         currentCtx = newCtx;
     }
+
+    global_tick += 1;
 
     return;
 }

@@ -19,8 +19,8 @@ $CC -v
 
 (
     cd "$CWD"
-    $CC      -g -c ./start.S -o ./start.o -march=rv64i -mabi=lp64
-    $CC      -g -c ./main.c -o ./main.o -march=rv64i -mabi=lp64 -mcmodel=medany
+    $CC      -g -c ./start.S -o ./start.o -march=rv64i -mabi=lp64 -O0
+    $CC      -g -c ./main.c -o ./main.o -march=rv64i -mabi=lp64 -mcmodel=medany -O0
 #    $LD      -Ttext=${TEXT_ADDR} -nostdlib ./start.o ./main.o -o ./start.elf
     $LD      -T ./linker.ld  -nostdlib ./start.o ./main.o -o ./start.elf
     $OBJCOPY -O binary ./start.elf ./start.bin
