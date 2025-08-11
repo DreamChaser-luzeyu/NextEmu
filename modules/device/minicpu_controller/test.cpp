@@ -14,6 +14,10 @@ TEST_CASE(test_test, "A test of test framework") {
     LOG_DEBUG("Hello Mem Ctrl Test!");
 }
 
+TEST_CASE(thread_pool_test, "Test of thread pool") {
+    
+}
+
 TEST_CASE(mem_ctrl_read, "A test of Memory Controller Read") {
     using namespace Builtin_ns;
     using namespace Base_ns;

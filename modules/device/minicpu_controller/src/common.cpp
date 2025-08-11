@@ -3,6 +3,7 @@
 #include <memory>
 #include <thread>
 #include <sdk/base/GDBStub.h>
+#include "sdk/base/ThreadPool.h"
 
 #include "sdk/console.h"
 
@@ -153,18 +154,20 @@ void Builtin_ns::MiniCPUMemController::emitEvent(std::shared_ptr<Builtin_ns::Min
 extern volatile std::atomic<uint64_t> global_tick;
 
 Builtin_ns::MiniCPUMemController::MiniCPUMemController(Interface_ns::SlaveIO_I *bus, const char* desc)
-        : bus(bus), devDesc(desc ? desc : "default"), stop(false) {
+        : bus(bus), devDesc(desc ? desc : "default"), stop(false), pool(NR_CHN) {
     // ----- Register Event Handler
     handler[EventType::ASYNC_READ] = [this](std::shared_ptr<MemCtrlEvent> event) {
+        // --- validate src and dst address
         // assert(0x200000000ul <= event->dstAddr && event->dstAddr <= 0x200000000ul + 128ul * 1024ul * 1024ul - 8);
         LOG_INFO("Handling read event...");
+        // --- delay cycles
+        uint64_t tick_start = global_tick;
+        while (global_tick - tick_start < NR_CYCLE);
+        // --- do read
         uint64_t data = 0;
         this->bus->load(event->srcAddr, 8, (uint8_t*)&data);
         this->bus->store(event->dstAddr, 8, (uint8_t*)&data);
-
-        uint64_t tick_start = global_tick;
-        // std::this_thread::sleep_for(std::chrono::milliseconds(200));
-        while (global_tick - tick_start < NR_CYCLE);
+        // --- clear rd pending bit
         {
             std::lock_guard<std::mutex> lock(this->regMutex);
             uint64_t mask = ~(1ul << event->chnID);
@@ -174,10 +177,13 @@ Builtin_ns::MiniCPUMemController::MiniCPUMemController(Interface_ns::SlaveIO_I *
     };
     handler[EventType::ASYNC_WRITE] = [this](std::shared_ptr<MemCtrlEvent> event) {
         LOG_INFO("Handling write event...");
+        // --- delay cycles
+        uint64_t tick_start = global_tick;
+        // --- Do write
         uint64_t data = 0;
         this->bus->load(event->srcAddr, 8, (uint8_t*)&data);
         this->bus->store(event->dstAddr, 8, (uint8_t*)&data);
-        uint64_t tick_start = global_tick;
+        // --- clear wr pending bit
         while (global_tick - tick_start < NR_CYCLE);
         {
             std::lock_guard<std::mutex> lock(this->regMutex);
@@ -198,13 +204,13 @@ Builtin_ns::MiniCPUMemController::MiniCPUMemController(Interface_ns::SlaveIO_I *
                 eventQueue.pop();
             }
             auto event_handler = (this->handler)[event->type];
-            event_handler(event);
-            // --- Clear bit
-            {
-                std::unique_lock<std::mutex> pendingBitLock(regMutex);
-                uint64_t mask = ~(1ul << (event->chnID));
-                (this->reg.rd_pending_chn_bits) &= mask;
-            }
+            pool.asyncRunTask([&](){ event_handler(event); });
+            // --- Clear bit (No need clear here, already cleared in handler)
+            // {
+            //     std::unique_lock<std::mutex> pendingBitLock(regMutex);
+            //     uint64_t mask = ~(1ul << (event->chnID));
+            //     (this->reg.rd_pending_chn_bits) &= mask;
+            // }
         }
     });
 }

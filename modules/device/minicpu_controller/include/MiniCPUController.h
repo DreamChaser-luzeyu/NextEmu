@@ -9,6 +9,7 @@
 #include <thread>
 
 #include "sdk/interface/dev_if.h"
+#include "sdk/base/ThreadPool.h"
 
 namespace Builtin_ns {
 
@@ -60,7 +61,7 @@ private:
 #pragma pack()
     std::mutex regMutex;
     volatile struct inner_state reg;
-
+    Base_ns::ThreadPool pool;
 
 public:
     explicit MiniCPUMemController(Interface_ns::SlaveIO_I *bus, const char* desc = nullptr);
