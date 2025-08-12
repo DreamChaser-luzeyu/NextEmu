@@ -67,6 +67,11 @@ public:
         serverAddr.sin_addr.s_addr = inet_addr(listen_addr.c_str());
         serverAddr.sin_port = htons(listen_port);
         // --- Bind address
+        int optval = 1;
+        if((setsockopt(listenFD,SOL_SOCKET, SO_REUSEPORT, &optval,sizeof(optval))) < 0) {
+            perror("setsockopt failed");
+            exit(EXIT_FAILURE);
+        }  // avoid err: address already in use
         int bind_feedback = bind(listenFD, (struct sockaddr*)&serverAddr, sizeof(struct sockaddr_in));
         if(bind_feedback == -1) LOG_ERRNO_AND_EXIT("Bind socket error");
         // --- Listen
