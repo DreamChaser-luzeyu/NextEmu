@@ -15,7 +15,12 @@ TEST_CASE(test_test, "A test of test framework") {
 }
 
 TEST_CASE(thread_pool_test, "Test of thread pool") {
-    
+    // auto *pool = new Base_ns::ThreadPool(8);
+    // for (int i = 0; i < 64; i++) {
+    //     pool->asyncRunTask([=]() {
+    //         LOG_INFO("Running task %d", i);
+    //     });
+    // }
 }
 
 TEST_CASE(mem_ctrl_read, "A test of Memory Controller Read") {

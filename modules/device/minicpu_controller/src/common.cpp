@@ -26,46 +26,29 @@ public:
 int Builtin_ns::MiniCPUMemController::load(Interface_ns::addr_t begin_addr, uint64_t len, uint8_t *buffer)  {
     LOG_INFO("Load  MiniCPU Controller %s at dev addr %016lx len %016lx", devDesc, begin_addr, len);
 
-    // --- Store value to reg struct
+    // --- Load data from reg struct
     assert(len == 8);
     uint64_t *ptr = (uint64_t*)((uint8_t*)(&this->reg) + begin_addr);
     memcpy(buffer, ptr, 8);
 
-    if (begin_addr == 0x10) {
-        // assert(len == 8);
-        // LOG_INFO("Mem Controller: Read 0x10 rd chnPending register");
-        // memcpy(buffer, (void*)&(this->reg.rd_pending_chn_bits), 8); // assuming little endian
-        // --- Dump bytes to load
-        STDOUT_ACQUIRE_LOCK;
-        for(size_t i = 0; i < len; i++) {
-            if(i % 8 == 0) printf("%s[INFO ] ", STYLE_TEXT_BLUE);
-            printf("%02x ", buffer[i]);
-            printf("%s", STYLE_RST);
-        }
-        printf("\n");
-        STDOUT_RELEASE_LOCK;
+    // --- Dump bytes loaded
+    STDOUT_ACQUIRE_LOCK;
+    for(size_t i = 0; i < len; i++) {
+        if(i % 8 == 0) printf("%s[INFO ] ", STYLE_TEXT_BLUE);
+        printf("%02x ", buffer[i]);
+        printf("%s", STYLE_RST);
     }
+    printf("\n");
+    STDOUT_RELEASE_LOCK;
 
-    if (begin_addr == 0x18) {
-        // assert(len == 8);
-        // LOG_INFO("Mem Controller: Read 0x18 wr chnPending register");
-        // memcpy(buffer, (void*)&(this->reg.wr_pending_chn_bits), 8); // assuming little endian
-        // --- Dump bytes to load
-        STDOUT_ACQUIRE_LOCK;
-        for(size_t i = 0; i < len; i++) {
-            if(i % 8 == 0) printf("%s[INFO ] ", STYLE_TEXT_BLUE);
-            printf("%02x ", buffer[i]);
-            printf("%s", STYLE_RST);
-        }
-        printf("\n");
-        STDOUT_RELEASE_LOCK;
-    }
+    // --- Actually does nothing when loading MiniCPUMemController
 
     return Interface_ns::FB_SUCCESS;
 }
 
 int Builtin_ns::MiniCPUMemController::store(Interface_ns::addr_t begin_addr, uint64_t len, const uint8_t *buffer)  {
     LOG_INFO("Store MiniCPU Controller %s at dev addr %016lx len %016lx", devDesc, begin_addr, len);
+
     // --- Dump bytes to store
     STDOUT_ACQUIRE_LOCK;
     for(size_t i = 0; i < len; i++) {
@@ -106,6 +89,7 @@ int Builtin_ns::MiniCPUMemController::store(Interface_ns::addr_t begin_addr, uin
 
                 emitEvent(event);
                 LOG_INFO("Mem Controller: Start read channel %lu", i);
+                break;
             }
         }
     }
@@ -162,7 +146,7 @@ Builtin_ns::MiniCPUMemController::MiniCPUMemController(Interface_ns::SlaveIO_I *
         LOG_INFO("Handling read event...");
         // --- delay cycles
         uint64_t tick_start = global_tick;
-        while (global_tick - tick_start < NR_CYCLE);
+        while (global_tick - tick_start < NR_CYCLE) {}
         // --- do read
         uint64_t data = 0;
         this->bus->load(event->srcAddr, 8, (uint8_t*)&data);
@@ -193,24 +177,20 @@ Builtin_ns::MiniCPUMemController::MiniCPUMemController(Interface_ns::SlaveIO_I *
         LOG_INFO("Handle done");
     };
 
-
+    // ----- MemController main event loop
     eventThread = std::make_unique<std::thread>([this]() {
         while (true) {
             std::shared_ptr<MemCtrlEvent> event;
             {
                 std::unique_lock<std::mutex> queue_lock(eventQueueMutex);
                 queueCond.wait(queue_lock, [this]() { return stop || (!eventQueue.empty()); });
+                if (stop) { break; }
                 event = eventQueue.front();
                 eventQueue.pop();
             }
             auto event_handler = (this->handler)[event->type];
-            pool.asyncRunTask([&](){ event_handler(event); });
-            // --- Clear bit (No need clear here, already cleared in handler)
-            // {
-            //     std::unique_lock<std::mutex> pendingBitLock(regMutex);
-            //     uint64_t mask = ~(1ul << (event->chnID));
-            //     (this->reg.rd_pending_chn_bits) &= mask;
-            // }
+            pool.asyncRunTask([=](){ event_handler(event); });
+            // --- Clear bit (No need to clear here, already cleared inside handler)
         }
     });
 }
