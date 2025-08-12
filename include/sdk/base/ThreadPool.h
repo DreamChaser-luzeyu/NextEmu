@@ -14,39 +14,44 @@ private:
     std::mutex poolMutex;
     class Worker {
     public:
-        volatile std::atomic<bool> isRunning;
+        std::mutex ownershipMutex;
+        // std::unique_lock<std::mutex> ownershipLock;
+        // volatile std::atomic<bool> isRunning;
         volatile std::atomic<bool> start;
         volatile std::atomic<bool> exit;
         std::shared_ptr<std::thread> thread;
         std::mutex runMutex;
         std::condition_variable runCond;
         std::function<void(void)> task;
-        Worker() : isRunning(false), start(false), exit(false) {
+        Worker() : start(false), exit(false){
             thread = std::make_shared<std::thread>([this]() {
+                // Note: for std::atomic, the default memory model is std::memory_order_seq_cst
                 while (true) {
                     std::unique_lock lock(runMutex);
                     runCond.wait(lock, [this]() {
-                        return start.load(std::memory_order_seq_cst) || exit.load(std::memory_order_seq_cst);
+                        return start.load() || exit.load();
                     });
-                    if (exit.load(std::memory_order_seq_cst)) { break; }
-                    isRunning.store(true, std::memory_order_seq_cst);
+                    if (exit.load()) { break; }
                     std::atomic_thread_fence(std::memory_order_release); // runs task only after setting flag
                     task();
                     std::atomic_thread_fence(std::memory_order_acquire); // sets flag only after finishing task
                     start.store(false, std::memory_order_seq_cst);
-                    isRunning.store(false, std::memory_order_seq_cst);
+                    std::atomic_thread_fence(std::memory_order_release);
                     // FYI: to make sure that setting isRunning to false strictly after setting start to false
+                    ownershipMutex.unlock();
                 }
             });
         }
-        bool isTaskRunning() const { return isRunning; }
+        bool isTaskRunning() const { return start; }
         void runTask(std::function<void(void)> tsk) {
             this->task = tsk;
-            while (isRunning) {}
-            assert(start.load(std::memory_order_seq_cst) == false);
+            assert(start == false);
             start.store(true, std::memory_order_seq_cst);
             std::atomic_thread_fence(std::memory_order_release);
             runCond.notify_one();
+        }
+        bool tryAcquire() {
+            return ownershipMutex.try_lock();
         }
         ~Worker() {
             exit.store(true, std::memory_order_seq_cst);
@@ -67,16 +72,17 @@ public:
         std::lock_guard<std::mutex> lock(this->poolMutex);
         // --- Find unused thread from pool
         size_t worker_idx = 0;
+        size_t pool_size = pool.size();
         while (true) {
-            if ((pool[worker_idx % pool.size()]->isRunning.load(std::memory_order_seq_cst)) == false) { break; }
+            if ((pool[worker_idx % pool_size]->tryAcquire())) { break; }
             if ((worker_idx != 0) && (worker_idx % pool.size() == 0)) {
                 LOG_DEBUG("No enougn threads, spin finding...");
             }
             worker_idx ++;
         }
-        assert(pool[worker_idx]->isRunning == false);
+        std::atomic_thread_fence(std::memory_order_seq_cst);
         // --- Run task in thread
-        pool[worker_idx]->runTask(task);
+        pool[worker_idx % pool_size]->runTask(task);
     }
 
     ~ThreadPool() {
